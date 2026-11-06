@@ -179,6 +179,50 @@ test("chapter tutor: shows chapter context and streams an answer", async ({ page
     .toBeGreaterThanOrEqual(2);
 });
 
+test("past conversations can be read, rated and deleted by their owner alone", async ({
+  browser,
+  page,
+}) => {
+  test.slow();
+  await signUpAsLearner(page, "history");
+  await page.goto("/ai-tutor/history");
+  await expect(page.getByText("No conversations")).toBeVisible();
+
+  await openChapter(page);
+  await openTutor(page);
+  await tutorComposer(page).fill("Why does this matter?");
+  await page.getByRole("button", { name: "Send message" }).click();
+  await expect(
+    page.getByTestId("tutor-transcript").getByText(/Request type: GENERAL_QUESTION/)
+  ).toBeVisible({ timeout: 30_000 });
+
+  await page.goto("/ai-tutor/history");
+  const links = page.getByRole("main").getByRole("listitem").getByRole("link");
+  await expect(links).toHaveCount(1, { timeout: 30_000 });
+  await links.first().click();
+  await expect(page.getByText("Why does this matter?")).toBeVisible();
+  const url = page.url();
+
+  await page.getByRole("button", { name: "Yes" }).click();
+  await expect(page.getByRole("button", { name: "Yes" })).toHaveAttribute(
+    "aria-pressed",
+    "true"
+  );
+
+  const stranger = await (await browser.newContext()).newPage();
+  await signUpAsLearner(stranger, "history-stranger");
+  // A stranger gets the same page as for an id that never existed.
+  await stranger.goto(url);
+  await expect(
+    stranger.getByRole("heading", { name: "That page does not exist" })
+  ).toBeVisible();
+  await expect(stranger.getByText("Why does this matter?")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Delete this conversation" }).click();
+  await expect(page.getByText("Conversation deleted.")).toBeVisible();
+  await expect(page.getByText("No conversations")).toBeVisible();
+});
+
 test("chapter tutor: a quick action sends a structured request", async ({ page }) => {
   await signUpAsLearner(page, "quickaction");
   await openChapter(page);

@@ -34,7 +34,13 @@ export default async function AiTutorPage() {
 
   return (
     <div className="mx-auto flex h-[calc(100dvh-3.5rem)] w-full max-w-6xl flex-col gap-5 px-4 py-4 sm:px-6 sm:py-6 lg:flex-row">
-      <div className="bg-card border-border min-h-0 flex-1 overflow-hidden rounded-xl border">
+      <Link
+        href="/ai-tutor/history"
+        className="text-sm font-medium text-info hover:text-brand-300 lg:hidden"
+      >
+        Your past conversations
+      </Link>
+      <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-card">
         <TutorPanel
           anchor={{ kind: "GLOBAL" }}
           label={
@@ -47,17 +53,24 @@ export default async function AiTutorPage() {
       </div>
 
       <aside className="hidden w-72 shrink-0 space-y-4 overflow-y-auto lg:block">
-        <div className="bg-card border-border overflow-hidden rounded-xl border">
-          <DesignThumb kind="chat" className="border-border h-28 w-full border-b" />
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <DesignThumb kind="chat" className="h-28 w-full border-b border-border" />
           <div className="p-4">
             <h2 className="text-sm font-semibold">Better with context</h2>
-            <p className="text-muted-foreground mt-1.5 text-xs leading-relaxed">
-              Open the tutor from inside a chapter or a problem and it reads what you are
-              looking at — the lesson text, the problem, your code, and your last failing
-              test.
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              Open the tutor from inside a chapter or a problem and it reads what you
+              are looking at — the lesson text, the problem, your code, and your last
+              failing test.
             </p>
           </div>
         </div>
+
+        <Link
+          href="/ai-tutor/history"
+          className="block px-1 text-sm font-medium text-info hover:text-brand-300"
+        >
+          Your past conversations
+        </Link>
 
         <nav aria-label="Places to open the tutor" className="space-y-2">
           <ContextLink
@@ -92,16 +105,16 @@ function ContextLink({
   return (
     <Link
       href={href}
-      className="group bg-card border-border hover:border-brand-500/40 focus-visible:ring-ring/50 flex items-start gap-3 rounded-xl border p-3 transition-colors focus-visible:ring-3 focus-visible:outline-none"
+      className="group flex items-start gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-brand-500/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
     >
-      <span className="bg-brand-500/12 text-brand-300 flex size-8 shrink-0 items-center justify-center rounded-lg">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand-500/12 text-brand-300">
         <Icon className="size-4" aria-hidden="true" />
       </span>
       <span className="min-w-0">
-        <span className="group-hover:text-brand-200 block text-sm font-medium transition-colors">
+        <span className="block text-sm font-medium transition-colors group-hover:text-brand-200">
           {title}
         </span>
-        <span className="text-muted-foreground mt-0.5 block text-xs leading-snug">
+        <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
           {description}
         </span>
       </span>

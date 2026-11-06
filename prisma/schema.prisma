@@ -1498,6 +1498,8 @@ model AIMessage {
   /// Which structured tutor request produced this turn (HINT, DEBUG_CODE, ...).
   /// Null for turns that predate the tutor UI, and for plain free-text asks.
   requestType    String?
+  /// The learner's verdict on an answer. Null means they did not say.
+  helpful        Boolean?
   createdAt      DateTime    @default(now())
 
   conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)

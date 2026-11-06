@@ -4,6 +4,7 @@ import { jobResponse, refuseCron } from "@/lib/cron-auth";
 import { runJob } from "@/services/jobs";
 import { getEnv } from "@/lib/env";
 import { purgeExpiredTranscripts } from "@/services/interview";
+import { purgeExpiredTutorConversations } from "@/services/tutor-history";
 
 /**
  * The transcript retention job. Deletes interview transcripts and code
@@ -19,11 +20,16 @@ export async function POST(request: NextRequest) {
   const refused = refuseCron(request);
   if (refused) return refused;
 
-  const days = getEnv().INTERVIEW_TRANSCRIPT_RETENTION_DAYS;
+  const env = getEnv();
+  const days = env.INTERVIEW_TRANSCRIPT_RETENTION_DAYS;
+  const tutorDays = env.TUTOR_CONVERSATION_RETENTION_DAYS;
   return jobResponse(
     await runJob("transcript-retention", async () => ({
       retentionDays: days,
       transcriptsDeleted: await purgeExpiredTranscripts(days),
+      tutorConversationsDeleted: tutorDays
+        ? await purgeExpiredTutorConversations(tutorDays)
+        : 0,
     }))
   );
 }

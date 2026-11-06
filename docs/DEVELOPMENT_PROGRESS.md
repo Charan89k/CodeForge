@@ -4,7 +4,7 @@ The durable log for the build mission. A new session reads this first, then cont
 
 ## Current position
 
-- **Branch:** `feat/contest-history`, stacked on `feat/aptitude` (PR #11). Each later slice stacks on the last until the PRs are merged.
+- **Branch:** `feat/tutor-controls`, stacked on `feat/contest-history` (PR #12). Each later slice stacks on the last until the PRs are merged.
 - **Phase:** 1 (shell and design).
 - **Next exact task:** see the bottom of this file.
 
@@ -78,6 +78,10 @@ Merging PRs #3, #4, #5. Any deployment or production change. Publishing courses.
 
 **Full gate at the contest branch, no retries.** Playwright 382 passed, 26 skipped, 0 failed. Vitest 1,958 passed, 35 skipped. Build exit 0.
 
+**Tutor controls.** `feat/tutor-controls`: `/ai-tutor/history` lets a learner read, rate, delete one or delete all of their tutor conversations. A stranger's request for one gets the not-found page. The retention job deletes idle conversations only when `TUTOR_CONVERSATION_RETENTION_DAYS` is set, which is the owner's decision. Adds a nullable column, so a migration.
+
+**Unexplained edits, left alone.** After the laptop restart on 2026-11-06, `e2e/capture-media.spec.ts` (`prev = node` became `prev = nodeKO`) and `e2e/interview.spec.ts` (a comment removed) were modified. I did not make them, so they are uncommitted and untouched. The owner should keep or discard them.
+
 ## Next exact task
 
-Tutor feedback, deletion, retention and study plans (roadmap 5.3), working with a local provider and an honest unavailable state. Course tags and topics (rest of 3.3) still need a migration and a CMS field.
+Community with moderation first (roadmap 5.4): reporting and moderation before any posting exists. Course tags and topics (rest of 3.3) still need a migration and a CMS field.
