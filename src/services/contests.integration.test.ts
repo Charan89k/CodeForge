@@ -4,7 +4,7 @@ vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
 
 import { prisma } from "@/lib/db";
 
-import { cancelContest, enterContest, getMyContests } from "./contests";
+import { cancelContest, enterContest, getMyContests, getStandings } from "./contests";
 
 const tag = `con${Date.now()}x${Math.floor(Math.random() * 1e6)}`;
 const HOUR = 3_600_000;
@@ -80,6 +80,46 @@ afterAll(async () => {
   await prisma.contest.deleteMany({ where: { slug: { startsWith: tag } } });
   await prisma.submission.deleteMany({ where: { userId: learner } });
   await prisma.user.deleteMany({ where: { id: { in: [admin.id, learner, rival] } } });
+});
+
+describe("getStandings", () => {
+  it("ranks every entrant of a large contest, including the last one read", async () => {
+    const crowd = Array.from(
+      { length: 2050 },
+      (_, i) => `${tag}-u${String(i).padStart(4, "0")}`
+    );
+    await prisma.user.createMany({
+      data: crowd.map((id) => ({ id, email: `${id}@techepitome.test` })),
+    });
+    try {
+      const ended = await prisma.contest.findUniqueOrThrow({
+        where: { slug: slugs.ended },
+        include: { problems: true },
+      });
+      await prisma.contestEntry.createMany({
+        data: crowd.map((userId) => ({ contestId: ended.id, userId })),
+      });
+      const last = crowd[crowd.length - 1]!;
+      await prisma.submission.create({
+        data: {
+          userId: last,
+          problemId,
+          language: "PYTHON",
+          code: "fixture",
+          status: "ACCEPTED",
+          isRun: false,
+          createdAt: new Date(ended.startsAt.getTime() + 60_000),
+        },
+      });
+
+      const standings = await getStandings(ended);
+
+      expect(standings).toHaveLength(crowd.length + 2);
+      expect(standings[0]).toMatchObject({ userId: last, rank: 1, solved: 1 });
+    } finally {
+      await prisma.user.deleteMany({ where: { id: { in: crowd } } });
+    }
+  });
 });
 
 describe("getMyContests", () => {

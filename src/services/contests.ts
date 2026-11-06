@@ -58,6 +58,19 @@ export async function enterContest(slug: string, userId: string, now = new Date(
   return true;
 }
 
+const STANDINGS_PAGE = 1000;
+
+const entryPage = (contestId: string, after: string | null) =>
+  prisma.contestEntry.findMany({
+    where: { contestId, ...(after ? { userId: { gt: after } } : {}) },
+    orderBy: { userId: "asc" },
+    take: STANDINGS_PAGE,
+    select: {
+      userId: true,
+      user: { select: { name: true, profile: { select: { username: true } } } },
+    },
+  });
+
 /** Standings use only scored submissions inside the window, from entrants. */
 export async function getStandings(contest: {
   id: string;
@@ -66,24 +79,30 @@ export async function getStandings(contest: {
   penaltyMinutes: number;
   problems: { problemId: string; points: number }[];
 }) {
-  const entries = await prisma.contestEntry.findMany({
-    where: { contestId: contest.id },
-    take: 2000,
-    select: {
-      userId: true,
-      user: { select: { name: true, profile: { select: { username: true } } } },
-    },
-  });
-  const submissions = await prisma.submission.findMany({
-    where: {
-      userId: { in: entries.map((e) => e.userId) },
-      problemId: { in: contest.problems.map((p) => p.problemId) },
-      isRun: false,
-      createdAt: { gte: contest.startsAt, lte: contest.endsAt },
-    },
-    orderBy: { createdAt: "asc" },
-    select: { userId: true, problemId: true, status: true, createdAt: true },
-  });
+  // Every entrant is ranked, read in pages so no single query grows with the contest.
+  const entries: Awaited<ReturnType<typeof entryPage>> = [];
+  for (let after: string | null = null; ;) {
+    const page = await entryPage(contest.id, after);
+    entries.push(...page);
+    if (page.length < STANDINGS_PAGE) break;
+    after = page[page.length - 1]!.userId;
+  }
+  const submissions = [];
+  for (let i = 0; i < entries.length; i += STANDINGS_PAGE) {
+    submissions.push(
+      ...(await prisma.submission.findMany({
+        where: {
+          userId: { in: entries.slice(i, i + STANDINGS_PAGE).map((e) => e.userId) },
+          problemId: { in: contest.problems.map((p) => p.problemId) },
+          isRun: false,
+          createdAt: { gte: contest.startsAt, lte: contest.endsAt },
+        },
+        orderBy: { createdAt: "asc" },
+        select: { userId: true, problemId: true, status: true, createdAt: true },
+      }))
+    );
+  }
+  // Each entrant's submissions sit in one page, so their order is already right.
   const names = new Map(
     entries.map((e) => [e.userId, e.user.profile?.username ?? e.user.name ?? "Entrant"])
   );
