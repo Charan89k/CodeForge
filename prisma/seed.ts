@@ -274,15 +274,11 @@ async function seedLLDExercises() {
 async function seedAptitude() {
   for (const topic of APTITUDE_TOPICS) {
     for (const { id, ...question } of topic.questions) {
-      const data = {
-        ...question,
-        options: [...question.options],
-        topic: topic.key,
-        status: "PUBLISHED" as const,
-      };
+      const data = { ...question, options: [...question.options], topic: topic.key };
       await prisma.aptitudeQuestion.upsert({
         where: { slug: `${topic.key}-${id}` },
-        create: { slug: `${topic.key}-${id}`, ...data },
+        create: { slug: `${topic.key}-${id}`, ...data, status: "PUBLISHED" },
+        // Status is left alone, so a re-seed never republishes a question an admin archived.
         update: data,
       });
     }
