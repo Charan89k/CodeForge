@@ -78,6 +78,12 @@ export const primaryNav: NavGroup[] = [
         icon: Repeat2,
         description: "Recall what you have learned, before you forget it",
       },
+      {
+        title: "Community",
+        href: "/community",
+        icon: MessagesSquare,
+        description: "Ask questions and talk problems through with other learners",
+      },
     ],
   },
   {

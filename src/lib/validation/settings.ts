@@ -23,6 +23,7 @@ export const profileSettingsSchema = z.object({
   notifyReviewDue: z.boolean(),
   notifyInterviewGraded: z.boolean(),
   notifyMilestones: z.boolean(),
+  notifyCommunity: z.boolean(),
 
   /** Email. Separate from the in-app preference above; opt-in. */
   emailReviewReminders: z.boolean(),
