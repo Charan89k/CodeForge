@@ -39,7 +39,7 @@ from the database on every request, so changing a URL grants nothing. See
 | Live Visualizer, guided algorithms | Live | 17 algorithms; every frame comes from running the algorithm |
 | Live Visualizer, your own code | Live | Python and JavaScript, traced in your browser |
 | Daily challenge and streak | Live | Solves are recorded only once Submit is configured |
-| Contests and standings | Partial | Admin-created, scored ICPC-style. No ratings or virtual contests. Needs Submit |
+| Contests and standings | Partial | Admin-created, scored ICPC-style. Your contests shows rank and score. Admins can cancel before the start. No ratings, editing or virtual contests. Needs Submit |
 | Leaderboard and public profiles | Live | Opt-in; nobody is listed by default |
 | AI tutor | Needs configuration | Requires an AI provider key |
 | Course CMS: authoring, review, publishing, version history | Live | Admin-only. Markdown lessons, or raw blocks for older chapters. An author cannot approve their own version, so publishing needs two admins. Knowledge checks are written with `npm run courses:author`; there is no screen for them, and one cannot be replaced once live |

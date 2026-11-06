@@ -91,11 +91,14 @@ export async function getCourseProgress(userId: string): Promise<CourseProgress[
 }
 
 /** Contests still to come or running now, soonest first. */
-export async function getOpenContests(now = new Date()): Promise<ContestPreview[]> {
+export async function getOpenContests(
+  now = new Date(),
+  take = CONTESTS_SHOWN
+): Promise<ContestPreview[]> {
   const contests = await prisma.contest.findMany({
     where: { endsAt: { gte: now } },
     orderBy: { startsAt: "asc" },
-    take: CONTESTS_SHOWN,
+    take,
     select: { slug: true, title: true, startsAt: true, endsAt: true },
   });
   return contests.map((contest) => ({

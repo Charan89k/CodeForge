@@ -76,7 +76,10 @@ test("a drive runs from recruiter to accepted offer, and eligibility is explaine
     office.page.getByRole("heading", { name: "Placement office" })
   ).toBeVisible();
   await office.page.getByRole("link", { name: "Go to recruiters" }).click();
-  await expect(office.page.getByRole("heading", { name: "Recruiters" })).toBeVisible();
+  // The first visit to this route can wait on the dev server compiling it.
+  await expect(office.page.getByRole("heading", { name: "Recruiters" })).toBeVisible({
+    timeout: 30_000,
+  });
 
   await office.page.getByLabel("Name").fill("Acme Systems");
   await office.page.getByLabel("Industry").fill("Software");

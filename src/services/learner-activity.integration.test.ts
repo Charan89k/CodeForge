@@ -146,7 +146,8 @@ describe("getCourseProgress", () => {
 
 describe("getOpenContests", () => {
   it("leaves out ended contests and labels the running one", async () => {
-    const contests = await getOpenContests();
+    // Other tests' contests share this table, so read past the dashboard's three.
+    const contests = await getOpenContests(new Date(), 1000);
     const mine = contests.filter((contest) => contestSlugs.includes(contest.slug));
 
     expect(mine.map((contest) => contest.phase)).toEqual(["live", "upcoming"]);

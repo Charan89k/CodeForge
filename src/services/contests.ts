@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/db";
 
-import { computeStandings, contestPhase } from "./contest-scoring";
+import { computeStandings, contestPhase, type ContestPhase } from "./contest-scoring";
 
 export { computeStandings, contestPhase } from "./contest-scoring";
 
@@ -58,6 +58,19 @@ export async function enterContest(slug: string, userId: string, now = new Date(
   return true;
 }
 
+const STANDINGS_PAGE = 1000;
+
+const entryPage = (contestId: string, after: string | null) =>
+  prisma.contestEntry.findMany({
+    where: { contestId, ...(after ? { userId: { gt: after } } : {}) },
+    orderBy: { userId: "asc" },
+    take: STANDINGS_PAGE,
+    select: {
+      userId: true,
+      user: { select: { name: true, profile: { select: { username: true } } } },
+    },
+  });
+
 /** Standings use only scored submissions inside the window, from entrants. */
 export async function getStandings(contest: {
   id: string;
@@ -66,24 +79,30 @@ export async function getStandings(contest: {
   penaltyMinutes: number;
   problems: { problemId: string; points: number }[];
 }) {
-  const entries = await prisma.contestEntry.findMany({
-    where: { contestId: contest.id },
-    take: 2000,
-    select: {
-      userId: true,
-      user: { select: { name: true, profile: { select: { username: true } } } },
-    },
-  });
-  const submissions = await prisma.submission.findMany({
-    where: {
-      userId: { in: entries.map((e) => e.userId) },
-      problemId: { in: contest.problems.map((p) => p.problemId) },
-      isRun: false,
-      createdAt: { gte: contest.startsAt, lte: contest.endsAt },
-    },
-    orderBy: { createdAt: "asc" },
-    select: { userId: true, problemId: true, status: true, createdAt: true },
-  });
+  // Every entrant is ranked, read in pages so no single query grows with the contest.
+  const entries: Awaited<ReturnType<typeof entryPage>> = [];
+  for (let after: string | null = null; ;) {
+    const page = await entryPage(contest.id, after);
+    entries.push(...page);
+    if (page.length < STANDINGS_PAGE) break;
+    after = page[page.length - 1]!.userId;
+  }
+  const submissions = [];
+  for (let i = 0; i < entries.length; i += STANDINGS_PAGE) {
+    submissions.push(
+      ...(await prisma.submission.findMany({
+        where: {
+          userId: { in: entries.slice(i, i + STANDINGS_PAGE).map((e) => e.userId) },
+          problemId: { in: contest.problems.map((p) => p.problemId) },
+          isRun: false,
+          createdAt: { gte: contest.startsAt, lte: contest.endsAt },
+        },
+        orderBy: { createdAt: "asc" },
+        select: { userId: true, problemId: true, status: true, createdAt: true },
+      }))
+    );
+  }
+  // Each entrant's submissions sit in one page, so their order is already right.
   const names = new Map(
     entries.map((e) => [e.userId, e.user.profile?.username ?? e.user.name ?? "Entrant"])
   );
@@ -95,6 +114,96 @@ export async function getStandings(contest: {
     ...row,
     name: names.get(row.userId) ?? "Entrant",
   }));
+}
+
+export type MyContest = {
+  slug: string;
+  title: string;
+  startsAt: Date;
+  phase: ContestPhase;
+  rank: number | null;
+  entrants: number;
+  solved: number;
+  score: number;
+};
+
+const MY_CONTESTS_SHOWN = 10;
+
+/** This learner's own contests, newest first, with where they finished. */
+export async function getMyContests(
+  userId: string,
+  now = new Date()
+): Promise<MyContest[]> {
+  const entries = await prisma.contestEntry.findMany({
+    where: { userId },
+    orderBy: { contest: { startsAt: "desc" } },
+    take: MY_CONTESTS_SHOWN,
+    select: {
+      contest: {
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          startsAt: true,
+          endsAt: true,
+          penaltyMinutes: true,
+          problems: { select: { problemId: true, points: true } },
+        },
+      },
+    },
+  });
+
+  // Sequential: each one reads standings, which is two queries.
+  const mine: MyContest[] = [];
+  for (const { contest } of entries) {
+    const standings = await getStandings(contest);
+    const row = standings.find((entry) => entry.userId === userId);
+    mine.push({
+      slug: contest.slug,
+      title: contest.title,
+      startsAt: contest.startsAt,
+      phase: contestPhase(contest, now),
+      rank: row?.rank ?? null,
+      entrants: standings.length,
+      solved: row?.solved ?? 0,
+      score: row?.score ?? 0,
+    });
+  }
+  return mine;
+}
+
+export type CancelContestResult = "cancelled" | "started" | "missing";
+
+/** Only before it starts: afterwards entrants' results depend on it. */
+export async function cancelContest(
+  admin: { id: string; email: string },
+  slug: string,
+  now = new Date()
+): Promise<CancelContestResult> {
+  const contest = await prisma.contest.findUnique({
+    where: { slug },
+    select: { id: true, startsAt: true, endsAt: true },
+  });
+  if (!contest) return "missing";
+  if (contestPhase(contest, now) !== "upcoming") return "started";
+  return prisma.$transaction(async (tx) => {
+    // Re-checked in the delete itself, so a contest that starts meanwhile survives.
+    const { count } = await tx.contest.deleteMany({
+      where: { id: contest.id, startsAt: { gt: new Date() } },
+    });
+    if (count === 0) return "started";
+    await tx.auditLog.create({
+      data: {
+        actorId: admin.id,
+        actorEmail: admin.email,
+        action: "contest.cancelled",
+        entity: "contest",
+        entityId: contest.id,
+        summary: `Cancelled contest ${slug}`,
+      },
+    });
+    return "cancelled";
+  });
 }
 
 export const contestInputSchema = z

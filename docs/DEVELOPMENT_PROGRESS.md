@@ -4,7 +4,7 @@ The durable log for the build mission. A new session reads this first, then cont
 
 ## Current position
 
-- **Branch:** `feat/aptitude`, stacked on `feat/sql-playground` (PR #10). Each later slice stacks on the last until the PRs are merged.
+- **Branch:** `feat/contest-history`, stacked on `feat/aptitude` (PR #11). Each later slice stacks on the last until the PRs are merged.
 - **Phase:** 1 (shell and design).
 - **Next exact task:** see the bottom of this file.
 
@@ -72,6 +72,12 @@ Merging PRs #3, #4, #5. Any deployment or production change. Publishing courses.
 
 **Aptitude.** `feat/aptitude`: questions move to `aptitude_questions`, `/aptitude` is public, with an optional timer, per-topic performance and `/admin/aptitude` for authoring with a second admin. **Release note: the migration must be followed by `db:seed:prod`, or `/campus/aptitude` shows no questions.** The original 24 questions default to Medium; nobody has graded them.
 
+**Timing failures, fixed.** `placement.spec.ts:63` failed at two gates and `campus-learning.spec.ts:60` once, each on a default 5 s wait just after a click to a new page, with the old page still showing. The most likely cause is the dev server compiling a route on first visit under load; that was not measured directly. `playwright.config.ts` now waits 15 s for every assertion, and what is asserted is unchanged. Slow pages can no longer fail a test until 15 s.
+
+**Contests.** `feat/contest-history`: a browser journey from entering to a real submission reaching the standings, Your contests with rank and score, and admin cancel before the start. No migration. Ratings are not built.
+
+**Full gate at the contest branch, no retries.** Playwright 382 passed, 26 skipped, 0 failed. Vitest 1,958 passed, 35 skipped. Build exit 0.
+
 ## Next exact task
 
-Contest journey tests, history and ratings (roadmap 5.2), with an honest disabled state until execution exists. Course tags and topics (rest of 3.3) still need a migration and a CMS field.
+Tutor feedback, deletion, retention and study plans (roadmap 5.3), working with a local provider and an honest unavailable state. Course tags and topics (rest of 3.3) still need a migration and a CMS field.

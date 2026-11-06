@@ -9,12 +9,15 @@ import { requireAdmin } from "@/lib/auth/session";
 import { route } from "@/lib/utils";
 import { contestPhase, listContests } from "@/services/contests";
 
-import { createContestAction } from "./actions";
+import { cancelContestAction, createContestAction } from "./actions";
 
 export const metadata: Metadata = { title: "Contests" };
 
 const MESSAGES: Record<string, string> = {
   created: "Contest created.",
+  cancelled: "Contest cancelled.",
+  started: "That contest has started, so it can no longer be cancelled.",
+  missing: "That contest no longer exists.",
   invalid:
     "Check the fields: dates must be in order, with 1 to 12 different problem numbers.",
   slug_taken: "That slug is taken.",
@@ -138,6 +141,13 @@ export default async function AdminContestsPage({
               <span className="font-mono text-xs text-subtle-foreground">
                 {contestPhase(c, now)} · {c._count.entries} entered
               </span>
+              {contestPhase(c, now) === "upcoming" && (
+                <form action={cancelContestAction.bind(null, c.slug)}>
+                  <Button type="submit" size="sm" variant="outline">
+                    Cancel {c.title}
+                  </Button>
+                </form>
+              )}
             </li>
           ))}
         </ul>
