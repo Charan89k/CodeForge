@@ -42,7 +42,7 @@ from the database on every request, so changing a URL grants nothing. See
 | Contests and standings | Partial | Admin-created, scored ICPC-style. No ratings or virtual contests. Needs Submit |
 | Leaderboard and public profiles | Live | Opt-in; nobody is listed by default |
 | AI tutor | Needs configuration | Requires an AI provider key |
-| Course CMS: authoring, review, publishing, version history | Live | Admin-only. Markdown lessons, or raw blocks for older chapters. An author cannot approve their own version, so publishing needs two admins. Knowledge checks are written with `npm run courses:author`; there is no screen for them, and one cannot be replaced once live |
+| Course CMS: authoring, review, publishing, version history | Live | Admin-only. Markdown lessons, or raw blocks for older chapters. Each version records who started it, who last edited it, and everyone who edited it. Nobody who wrote or edited a version can publish it or send it back, so publishing needs an admin who did neither. Knowledge checks are written with `npm run courses:author`; there is no screen for them, and one cannot be replaced once live |
 | Download your data, delete your account | Live | From `/settings`. Deletion is refused for platform admins, authors, and anyone with college records, pending an approved privacy policy |
 | Original courses | Partial | Programming Foundations, Database Foundations and Core Algorithms: 27 lessons, 27 knowledge checks, every example run by a test. Written and tested; they reach a site only when an operator runs `npm run courses:author` there. More subjects are not written yet |
 | SQL problems and playground | Planned | |

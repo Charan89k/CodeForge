@@ -556,6 +556,7 @@ model User {
   placementRecords      PlacementRecord[]
   placementApplications PlacementApplication[]
   revisionsAuthored     ChapterRevision[]        @relation("RevisionAuthor")
+  revisionsLastEdited   ChapterRevision[]        @relation("RevisionLastEditor")
   revisionsReviewed     ChapterRevision[]        @relation("RevisionReviewer")
   aptitudeAttempts      AptitudeAttempt[]
   quizAttempts          QuizAttempt[]
@@ -739,16 +740,22 @@ model ChapterRevision {
   readingMinutes Int            @default(5)
   difficulty     Difficulty     @default(EASY)
   status         RevisionStatus @default(DRAFT)
+  /// Who started this version. Never changes when others edit it.
   authorId       String
+  /// Who saved it most recently.
+  lastEditedById String?
+  /// Everyone who saved it, the author included. None of them may review it.
+  editorIds      String[]       @default([])
   reviewerId     String?
   reviewNote     String?        @db.Text
   publishedAt    DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  chapter  Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  author   User    @relation("RevisionAuthor", fields: [authorId], references: [id], onDelete: Restrict)
-  reviewer User?   @relation("RevisionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  chapter    Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  author     User    @relation("RevisionAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  lastEditor User?   @relation("RevisionLastEditor", fields: [lastEditedById], references: [id], onDelete: SetNull)
+  reviewer   User?   @relation("RevisionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
 
   @@unique([chapterId, number])
   @@index([status])

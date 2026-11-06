@@ -300,4 +300,55 @@ describe("the course CMS", () => {
       })
     ).toBeGreaterThanOrEqual(2);
   });
+
+  it("keeps the author when another admin edits, and bars both from reviewing", async () => {
+    const third = await prisma.user.create({
+      data: { email: `${tag}-third@techepitome.test`, role: "ADMIN" },
+      select: { id: true, email: true, role: true },
+    });
+    try {
+      const shared = await createChapter(admin, sectionId, {
+        title: "Shared",
+        slug: "shared",
+      });
+      await saveDraft(admin, shared, draft("## Shared\n\nFirst words"));
+      await saveDraft(reviewer, shared, draft("## Shared\n\nA small edit"));
+      await saveDraft(reviewer, shared, draft("## Shared\n\nAnother edit"));
+      const revision = (await getChapterForEditing(shared))!.revisions[0]!;
+
+      expect(revision).toMatchObject({
+        authorId: admin.id,
+        editorIds: [admin.id, reviewer.id],
+        author: { email: admin.email },
+        lastEditor: { email: reviewer.email },
+      });
+
+      await submitForReview(admin, revision.id);
+      for (const contributor of [admin, reviewer]) {
+        await expect(publishRevision(contributor, revision.id)).rejects.toThrow(
+          /different admin/
+        );
+        await expect(rejectRevision(contributor, revision.id, "No")).rejects.toThrow(
+          /different admin/
+        );
+      }
+      await publishRevision(third, revision.id);
+
+      await expect(
+        prisma.chapterRevision.findUniqueOrThrow({ where: { id: revision.id } })
+      ).resolves.toMatchObject({
+        status: "PUBLISHED",
+        authorId: admin.id,
+        lastEditedById: reviewer.id,
+        reviewerId: third.id,
+      });
+    } finally {
+      await prisma.auditLog.deleteMany({ where: { actorId: third.id } });
+      await prisma.chapterRevision.updateMany({
+        where: { reviewerId: third.id },
+        data: { reviewerId: null },
+      });
+      await prisma.user.delete({ where: { id: third.id } });
+    }
+  });
 });
