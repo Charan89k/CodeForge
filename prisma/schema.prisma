@@ -606,6 +606,15 @@ model User {
   lldSubmissions        LLDSubmission[]
   notifications         Notification[]
   emailDeliveries       EmailDelivery[]
+  communityThreads      CommunityThread[]
+  communityPosts        CommunityPost[]
+  communityVotes        CommunityVote[]
+  communityReports      CommunityReport[]
+  communityAppeals      CommunityAppeal[]
+  communityBlocks       CommunityBlock[]         @relation("CommunityBlocker")
+  communityBlockedBy    CommunityBlock[]         @relation("CommunityBlocked")
+  communityModerator    CommunityModerator?
+  communityRestriction  CommunityRestriction?
 
   @@index([role])
   @@index([createdAt])
@@ -698,6 +707,8 @@ model Profile {
   notifyReviewDue       Boolean @default(true)
   notifyInterviewGraded Boolean @default(true)
   notifyMilestones      Boolean @default(true)
+  /// Mentions and replies in the community.
+  notifyCommunity       Boolean @default(true)
 
   /// Review reminders by email. **Opt-in**, unlike the in-app
   /// preferences above: mail leaves the building and cannot be un-sent,
@@ -1851,6 +1862,8 @@ enum NotificationKind {
   INTERVIEW_GRADED
   MILESTONE
   ACCOUNT
+  /// Someone mentioned you, or replied to your thread, in the community.
+  COMMUNITY
 }
 
 /// An in-app notification.
@@ -2539,4 +2552,232 @@ model JobRun {
 
   @@index([job, startedAt])
   @@map("job_runs")
+}
+
+// ---------------------------------------------------------------------------
+// Community. Platform-wide and part of Learn: no institution owns a thread,
+// so nothing here is visible to or managed by a college. Moderation came
+// first: every post can be reported, hidden by a moderator with a reason the
+// author sees, and appealed once.
+// ---------------------------------------------------------------------------
+
+enum CommunityThreadKind {
+  DISCUSSION
+  QUESTION
+}
+
+/// HIDDEN is a moderator's decision; REMOVED is the author's own.
+enum CommunityStatus {
+  VISIBLE
+  HIDDEN
+  REMOVED
+}
+
+enum CommunityReportReason {
+  SPAM
+  HARASSMENT
+  OFF_TOPIC
+  UNSAFE_LINK
+  COPIED_CONTENT
+  OTHER
+}
+
+enum CommunityReportStatus {
+  OPEN
+  ACTIONED
+  DISMISSED
+}
+
+enum CommunityAppealStatus {
+  OPEN
+  UPHELD
+  OVERTURNED
+}
+
+model CommunityCategory {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  threads CommunityThread[]
+
+  @@map("community_categories")
+}
+
+model CommunityThread {
+  id             String              @id @default(cuid())
+  categoryId     String
+  /// Null once the author deletes their account; the thread stays for others.
+  authorId       String?
+  kind           CommunityThreadKind @default(DISCUSSION)
+  title          String
+  body           String              @db.Text
+  status         CommunityStatus     @default(VISIBLE)
+  /// Shown to the author when a moderator hides it.
+  hiddenReason   String?
+  locked         Boolean             @default(false)
+  acceptedPostId String?             @unique
+  voteCount      Int                 @default(0)
+  replyCount     Int                 @default(0)
+  lastActivityAt DateTime            @default(now())
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  category CommunityCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  author   User?             @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  posts    CommunityPost[]   @relation("ThreadPosts")
+  accepted CommunityPost?    @relation("AcceptedAnswer", fields: [acceptedPostId], references: [id], onDelete: SetNull)
+  votes    CommunityVote[]
+  reports  CommunityReport[]
+  appeals  CommunityAppeal[]
+
+  @@index([categoryId, status, lastActivityAt])
+  @@index([status, lastActivityAt])
+  @@index([status, voteCount])
+  @@index([authorId, createdAt])
+  @@map("community_threads")
+}
+
+model CommunityPost {
+  id           String          @id @default(cuid())
+  threadId     String
+  authorId     String?
+  body         String          @db.Text
+  status       CommunityStatus @default(VISIBLE)
+  hiddenReason String?
+  voteCount    Int             @default(0)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  thread     CommunityThread   @relation("ThreadPosts", fields: [threadId], references: [id], onDelete: Cascade)
+  author     User?             @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  acceptedIn CommunityThread?  @relation("AcceptedAnswer")
+  votes      CommunityVote[]
+  reports    CommunityReport[]
+  appeals    CommunityAppeal[]
+
+  @@index([threadId, createdAt])
+  @@index([authorId, createdAt])
+  @@map("community_posts")
+}
+
+/// One vote per person per thread or post: the unique keys are the guarantee.
+model CommunityVote {
+  id        String   @id @default(cuid())
+  userId    String
+  threadId  String?
+  postId    String?
+  createdAt DateTime @default(now())
+
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread CommunityThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  post   CommunityPost?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, threadId])
+  @@unique([userId, postId])
+  @@map("community_votes")
+}
+
+/// One report per person per item, so a single account cannot pile on.
+model CommunityReport {
+  id          String                @id @default(cuid())
+  reporterId  String
+  threadId    String?
+  postId      String?
+  reason      CommunityReportReason
+  note        String?
+  status      CommunityReportStatus @default(OPEN)
+  /// Copied, like the audit log: the record outlives the moderator's account.
+  handledById String?
+  handledAt   DateTime?
+  createdAt   DateTime              @default(now())
+
+  reporter User             @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  thread   CommunityThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  post     CommunityPost?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterId, threadId])
+  @@unique([reporterId, postId])
+  @@index([status, createdAt])
+  @@map("community_reports")
+}
+
+/// An author asks for a hidden thread or post to be looked at again, once.
+model CommunityAppeal {
+  id          String                @id @default(cuid())
+  authorId    String
+  threadId    String?
+  postId      String?
+  message     String
+  status      CommunityAppealStatus @default(OPEN)
+  handledById String?
+  handledAt   DateTime?
+  createdAt   DateTime              @default(now())
+
+  author User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  thread CommunityThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  post   CommunityPost?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([authorId, threadId])
+  @@unique([authorId, postId])
+  @@index([status, createdAt])
+  @@map("community_appeals")
+}
+
+/// Append-only record of every moderation decision, with its reason.
+model CommunityModerationAction {
+  id             String   @id @default(cuid())
+  moderatorId    String
+  moderatorEmail String
+  action         String
+  threadId       String?
+  postId         String?
+  targetUserId   String?
+  reason         String
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([threadId])
+  @@map("community_moderation_actions")
+}
+
+/// Granted by a platform admin. Admins moderate without a row here.
+model CommunityModerator {
+  userId      String   @id
+  grantedById String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("community_moderators")
+}
+
+/// A moderator's posting restriction on one account, until a date.
+model CommunityRestriction {
+  userId      String   @id
+  until       DateTime
+  reason      String
+  createdById String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("community_restrictions")
+}
+
+/// You stop seeing someone, and they cannot mention or reply-notify you.
+model CommunityBlock {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("CommunityBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("CommunityBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("community_blocks")
 }
