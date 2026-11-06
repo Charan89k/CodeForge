@@ -142,7 +142,7 @@ function CourseRow({ course }: { course: LibraryCourse }) {
             {course.category}
           </p>
         )}
-        <h3 className="mt-1 text-lg leading-snug font-semibold text-balance">
+        <h3 className="mt-1 font-editorial text-xl leading-snug font-medium text-balance">
           <Link
             href={route(course.href)}
             className="underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"

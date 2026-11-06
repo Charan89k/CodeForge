@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
 
+import { getVisualization } from "@/components/visualization/registry";
 import { markdownToBlocks } from "@/lib/cms/markdown";
 import { prisma } from "@/lib/db";
 import { contentDocumentSchema } from "@/lib/validation/content";
@@ -67,6 +68,15 @@ describe.each(
       questions: lesson.questions,
     });
     expect(parsed.error?.issues).toBeUndefined();
+  });
+
+  it("embeds only visualizations that exist", () => {
+    for (const block of blocks) {
+      if (block.type === "visualization") {
+        const key = block.visualizationKey;
+        expect(getVisualization(key), key).not.toBeNull();
+      }
+    }
   });
 
   it("links only to problems that exist", () => {

@@ -1,5 +1,15 @@
 # Tech Epitome design system
 
+**Surfaces (2026-11-01, owner's decision).** `surfaceForPath` in
+`src/lib/navigation.ts` gives every shell page a surface, and tokens key off
+`[data-surface]` in `globals.css`. **Learn** (library, courses, dashboard,
+problem list) is a warm publication: cream paper or warm charcoal, ink text, one
+terracotta accent, navy links, and Source Serif 4 (`font-editorial`) for `h1`,
+`h2` and `.reading`. **Workspace** (problem and design editors), **Lab**
+(visualizer), **Campus** and **Admin** keep the navy and indigo tokens below.
+Contrast is enforced by `src/lib/design/contrast.test.ts`. Do not hard-code
+colours: a raw hex would ignore the surface.
+
 Structure follows the AlgoMaster reference (a dense, dark-first developer
 tool). Colour is Tech Epitome's own: deep navy surfaces and a single **indigo**
 accent, with cyan for information and teal for success (palette switched from

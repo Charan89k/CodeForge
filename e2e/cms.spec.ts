@@ -103,14 +103,29 @@ test("an admin authors a course and a learner reads it only once published", asy
   await page.goto(chapterUrl);
 
   await page.getByRole("button", { name: "Submit for review" }).click();
-  const publish = page.getByRole("button", { name: "Publish", exact: true });
+  // The author cannot approve their own words.
+  await expect(page.getByText("Waiting for a different admin")).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.getByRole("button", { name: "Publish", exact: true })).toHaveCount(
+    0
+  );
+
+  const reviewerContext = await browser.newContext();
+  const reviewerPage = await reviewerContext.newPage();
+  const reviewerEmail = `e2e-cms-reviewer-${id}@techepitome.test`;
+  await signUp(reviewerPage, reviewerEmail);
+  await makeAdmin(reviewerEmail);
+  await reviewerPage.goto(chapterUrl);
+  const publish = reviewerPage.getByRole("button", { name: "Publish", exact: true });
   await expect(publish).toBeVisible({ timeout: 30_000 });
   await publish.click();
   await expect(
-    page.getByRole("button", { name: "Start a draft from this" })
+    reviewerPage.getByRole("button", { name: "Start a draft from this" })
   ).toBeVisible({
     timeout: 30_000,
   });
+  await reviewerContext.close();
 
   // The course is still a draft, so a visitor gets nothing.
   const visitor = await browser.newPage();

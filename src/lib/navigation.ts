@@ -227,6 +227,23 @@ export function productForPath(pathname: string): Product {
     : "learn";
 }
 
+/**
+ * The visual surface a page belongs to, which is finer than the product:
+ * Learn reads as a warm publication, while the coding workspaces and the
+ * visualizer stay dark developer tools. Only tokens differ, so it is CSS's
+ * concern; see `[data-surface]` in globals.css.
+ */
+export type Surface = "learn" | "campus" | "admin" | "workspace" | "lab";
+
+const WORKSPACE_PATHS = /^\/(problems|system-design|lld)\/[^/]+/;
+
+export function surfaceForPath(pathname: string): Surface {
+  if (productForPath(pathname) === "campus") return "campus";
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) return "admin";
+  if (pathname === "/visualize" || pathname.startsWith("/visualize/")) return "lab";
+  return WORKSPACE_PATHS.test(pathname) ? "workspace" : "learn";
+}
+
 /** The viewer's college, if any: the one faculty work happens in comes first. */
 export type NavCampus = {
   slug: string;

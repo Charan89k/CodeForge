@@ -17,6 +17,7 @@
 
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-editorial: var(--font-source-serif), ui-serif, Georgia, serif;
   --font-heading: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   /* Display: Plex Sans semibold with tight tracking (see .display). */
   --font-display: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
@@ -272,6 +273,119 @@
   --chart-5: #7c3aed;
 
   --elevation-raised: 0 1px 2px rgb(21 33 58 / 0.06), 0 8px 24px -12px rgb(21 33 58 / 0.18);
+}
+
+/* --------------------------------------------------------------------------
+   The Learn surface: a warm publication rather than a navy tool. Cream paper
+   and ink by day, warm charcoal by night, with one terracotta accent. Navy
+   survives as the link and information colour. Contrast is checked in
+   src/lib/design/contrast.test.ts. Campus, workspaces and the visualizer keep
+   the tokens above.
+   -------------------------------------------------------------------------- */
+[data-surface="learn"] {
+  --background: #17140f;
+  --foreground: #f5efe4;
+  --card: #1f1b15;
+  --card-foreground: #f5efe4;
+  --popover: #26211a;
+  --popover-foreground: #f5efe4;
+  --primary: #b84f28;
+  --primary-foreground: #ffffff;
+  --secondary: #2c261e;
+  --secondary-foreground: #f5efe4;
+  --muted: #26211a;
+  --muted-foreground: #c4b9a7;
+  --subtle-foreground: #a49885;
+  --accent: #2c261e;
+  --accent-foreground: #f5efe4;
+  --destructive: #f08a7e;
+  --destructive-foreground: #1f0d0a;
+  --border: #3a3328;
+  --input: #7d7260;
+  --ring: #e98f5f;
+  --brand-50: #fdf3ec;
+  --brand-100: #fde6d8;
+  --brand-200: #f9cdb4;
+  --brand-300: #f2ae88;
+  --brand-400: #e98f5f;
+  --brand-500: #d9743f;
+  --brand-600: #b84f28;
+  --brand-700: #a84722;
+  --success: #7cc48a;
+  --warning: #e0b357;
+  --info: #8fbde8;
+  --difficulty-easy: #7cc48a;
+  --difficulty-medium: #e0b357;
+  --difficulty-hard: #f08a7e;
+  --sidebar: #1b1712;
+  --sidebar-foreground: #e4dac8;
+  --sidebar-primary: #b84f28;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2c261e;
+  --sidebar-accent-foreground: #f5efe4;
+  --sidebar-border: #2f291f;
+  --sidebar-ring: #e98f5f;
+}
+
+.light [data-surface="learn"],
+.light[data-surface="learn"] {
+  --background: #faf6ee;
+  --foreground: #241f18;
+  --card: #fffdf8;
+  --card-foreground: #241f18;
+  --popover: #fffdf8;
+  --popover-foreground: #241f18;
+  --primary: #9a3f1c;
+  --primary-foreground: #ffffff;
+  --secondary: #f3ecdf;
+  --secondary-foreground: #241f18;
+  --muted: #f3ecdf;
+  --muted-foreground: #5b5244;
+  --subtle-foreground: #6b6152;
+  --accent: #f3ecdf;
+  --accent-foreground: #241f18;
+  --destructive: #b3261e;
+  --destructive-foreground: #ffffff;
+  --border: #e4dac8;
+  --input: #8a7f6c;
+  --ring: #9a3f1c;
+  --brand-50: #fdf3ec;
+  --brand-100: #5f2410;
+  --brand-200: #742c13;
+  --brand-300: #8a3517;
+  --brand-400: #9a3f1c;
+  --brand-500: #9a3f1c;
+  --brand-600: #84351a;
+  --brand-700: #6d2b14;
+  --success: #2f6b3a;
+  --warning: #8a5a0b;
+  --info: #1d4f7a;
+  --difficulty-easy: #2f6b3a;
+  --difficulty-medium: #8a5a0b;
+  --difficulty-hard: #b3261e;
+  --sidebar: #f6f0e4;
+  --sidebar-foreground: #38312a;
+  --sidebar-primary: #9a3f1c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ece3d2;
+  --sidebar-accent-foreground: #241f18;
+  --sidebar-border: #e4dac8;
+  --sidebar-ring: #9a3f1c;
+}
+
+/* The serif carries hierarchy on Learn, so headings drop the tool's tight
+   tracking and heavier weight. Interface text stays Plex Sans. */
+[data-surface="learn"] main h1,
+[data-surface="learn"] main h2 {
+  font-family: var(--font-source-serif), ui-serif, Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+}
+
+[data-surface="learn"] .reading {
+  font-family: var(--font-source-serif), ui-serif, Georgia, serif;
+  font-size: 1.125rem;
+  line-height: 1.7;
 }
 
 @layer base {

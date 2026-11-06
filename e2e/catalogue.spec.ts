@@ -37,7 +37,7 @@ test("filters combine, are removable one at a time, and clear together", async (
 
   await choose(page, "Data Structures & Algorithms");
   await expect(page).toHaveURL(/subject=Data\+Structures\+%26\+Algorithms/);
-  await expect(results.getByRole("heading", { level: 3 })).toHaveCount(1);
+  await expect(results.getByRole("heading", { name: "System Design" })).toHaveCount(0);
   await expect(results.getByRole("heading", { name: "DSA Foundations" })).toBeVisible();
 
   await choose(page, "Medium");

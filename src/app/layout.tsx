@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { IBM_Plex_Sans, JetBrains_Mono } from "next/font/google";
+import { IBM_Plex_Sans, JetBrains_Mono, Source_Serif_4 } from "next/font/google";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -23,6 +23,13 @@ const plexSans = IBM_Plex_Sans({
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+// Headings and long-form reading on the Learn surface only.
+const sourceSerif = Source_Serif_4({
+  variable: "--font-source-serif",
   subsets: ["latin"],
   display: "swap",
 });
@@ -93,7 +100,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${plexSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${plexSans.variable} ${jetbrainsMono.variable} ${sourceSerif.variable} h-full antialiased`}
     >
       <body
         className="flex min-h-full flex-col"
@@ -110,7 +117,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             {/* First tab stop on every page. */}
             <a
               href="#main"
-              className="bg-background focus:ring-ring sr-only rounded-md px-4 py-2 text-sm font-medium focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:ring-2"
+              className="sr-only rounded-md bg-background px-4 py-2 text-sm font-medium focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:ring-2 focus:ring-ring"
             >
               Skip to content
             </a>

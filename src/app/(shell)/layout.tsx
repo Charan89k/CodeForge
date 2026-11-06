@@ -1,5 +1,6 @@
 import { AppRail } from "@/components/layout/app-rail";
 import { CommandPaletteProvider } from "@/components/layout/command-palette";
+import { ShellSurface } from "@/components/layout/shell-surface";
 import { SiteHeader } from "@/components/layout/site-header";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listMyMemberships } from "@/services/institutions";
@@ -35,36 +36,38 @@ export default async function ShellLayout({ children }: LayoutProps<"/">) {
     : null;
 
   return (
-    <CommandPaletteProvider
-      viewer={user ? { role: user.role, campusMember, campus } : null}
-    >
-      <SiteHeader
-        user={
-          user
-            ? {
-                name: user.name,
-                email: user.email,
-                image: user.image,
-                role: user.role,
-                campusMember,
-                campus,
-              }
-            : null
-        }
-        streak={streak}
-        unreadNotifications={unread}
-      />
-      <div className="flex min-h-0 flex-1">
-        <AppRail user={user ? { role: user.role, campusMember, campus } : null} />
-        {/* The one `main` landmark in the shell, and the skip link's
+    <ShellSurface>
+      <CommandPaletteProvider
+        viewer={user ? { role: user.role, campusMember, campus } : null}
+      >
+        <SiteHeader
+          user={
+            user
+              ? {
+                  name: user.name,
+                  email: user.email,
+                  image: user.image,
+                  role: user.role,
+                  campusMember,
+                  campus,
+                }
+              : null
+          }
+          streak={streak}
+          unreadNotifications={unread}
+        />
+        <div className="flex min-h-0 flex-1">
+          <AppRail user={user ? { role: user.role, campusMember, campus } : null} />
+          {/* The one `main` landmark in the shell, and the skip link's
             target. Pages render sections inside it rather than a
             `main` of their own — nested `main` is invalid HTML and
             leaves a screen-reader user with two landmarks to choose
             between. */}
-        <main id="main" className="min-w-0 flex-1">
-          {children}
-        </main>
-      </div>
-    </CommandPaletteProvider>
+          <main id="main" className="min-w-0 flex-1">
+            {children}
+          </main>
+        </div>
+      </CommandPaletteProvider>
+    </ShellSurface>
   );
 }

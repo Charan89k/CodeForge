@@ -368,7 +368,10 @@ export async function getChapterForEditing(chapterId: string) {
           reviewNote: true,
           publishedAt: true,
           updatedAt: true,
+          authorId: true,
+          editorIds: true,
           author: { select: { email: true } },
+          lastEditor: { select: { email: true } },
         },
       },
     },
@@ -437,12 +440,19 @@ export async function saveDraft(
     const latest = await tx.chapterRevision.findFirst({
       where: { chapterId },
       orderBy: { number: "desc" },
-      select: { id: true, number: true, status: true },
+      select: { id: true, number: true, status: true, editorIds: true },
     });
     if (latest?.status === "DRAFT") {
+      // The author stays who started it; an editor is added, never swapped in.
       await tx.chapterRevision.update({
         where: { id: latest.id },
-        data: { ...data, authorId: actor.id },
+        data: {
+          ...data,
+          lastEditedById: actor.id,
+          ...(latest.editorIds.includes(actor.id)
+            ? {}
+            : { editorIds: { push: actor.id } }),
+        },
       });
       return;
     }
@@ -450,11 +460,38 @@ export async function saveDraft(
       data: {
         ...data,
         chapterId,
-        authorId: actor.id,
+        ...startedBy(actor),
         number: (latest?.number ?? 0) + 1,
       },
     });
   });
+}
+
+const startedBy = (actor: CmsActor) => ({
+  authorId: actor.id,
+  lastEditedById: actor.id,
+  editorIds: [actor.id],
+});
+
+/**
+ * Nobody approves or sends back words they wrote: a second person reads them.
+ * That covers anyone who edited the version, not only who started it.
+ */
+async function assertNotAuthor(
+  tx: Prisma.TransactionClient,
+  actor: CmsActor,
+  revisionId: string
+): Promise<void> {
+  const revision = await tx.chapterRevision.findUnique({
+    where: { id: revisionId },
+    select: { authorId: true, editorIds: true },
+  });
+  if (revision?.authorId === actor.id || revision?.editorIds.includes(actor.id)) {
+    throw new CmsError(
+      "conflict",
+      "A different admin must review a version you wrote or edited."
+    );
+  }
 }
 
 async function moveRevision(
@@ -467,6 +504,7 @@ async function moveRevision(
 ): Promise<void> {
   assertAdmin(actor);
   await prisma.$transaction(async (tx) => {
+    if (to === "REJECTED") await assertNotAuthor(tx, actor, revisionId);
     const claimed = await tx.chapterRevision.updateMany({
       where: { id: revisionId, status: from },
       data: {
@@ -501,6 +539,7 @@ export async function publishRevision(
 ): Promise<void> {
   assertAdmin(actor);
   await prisma.$transaction(async (tx) => {
+    await assertNotAuthor(tx, actor, revisionId);
     const claimed = await tx.chapterRevision.updateMany({
       where: { id: revisionId, status: "IN_REVIEW" },
       data: { status: "PUBLISHED", reviewerId: actor.id, publishedAt: new Date() },
@@ -677,7 +716,7 @@ export async function restoreRevision(
         keyTakeaways: old.keyTakeaways,
         readingMinutes: old.readingMinutes,
         difficulty: old.difficulty,
-        authorId: actor.id,
+        ...startedBy(actor),
       },
     });
     await audit(

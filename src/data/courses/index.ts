@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import type { Difficulty } from "@/generated/prisma/enums";
 
+import { CORE_ALGORITHMS } from "./core-algorithms";
 import { DATABASE_FOUNDATIONS } from "./database-foundations";
 import { PROGRAMMING_FOUNDATIONS } from "./programming-foundations";
 
@@ -58,6 +59,7 @@ export type CourseSource = {
 export const AUTHORED_COURSES: CourseSource[] = [
   PROGRAMMING_FOUNDATIONS,
   DATABASE_FOUNDATIONS,
+  CORE_ALGORITHMS,
 ];
 
 export const lessonPath = (course: CourseSource, lesson: LessonSource) =>

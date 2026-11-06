@@ -62,8 +62,7 @@ async function setEditorCode(page: Page, code: string): Promise<void> {
       async () =>
         page.evaluate(() => {
           const monaco = (window as unknown as { monaco?: unknown }).monaco as
-            | { editor: { getModels: () => unknown[] } }
-            | undefined;
+            { editor: { getModels: () => unknown[] } } | undefined;
           return monaco ? monaco.editor.getModels().length : 0;
         }),
       { timeout: 60_000 }
@@ -155,7 +154,13 @@ test("a new learner can go from signup to a solved problem", async ({ page }) =>
 
   // ---- The dashboard reflects it -----------------------------------------
   await page.goto("/dashboard");
-  await expect(page.getByText("1 chapters")).toBeVisible();
+  await expect(page.getByText("1 chapter", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your year" })).toBeVisible();
+  await expect(page.getByRole("img", { name: /1 active day,/ })).toBeVisible();
+  const courses = page.getByRole("region", { name: "Your courses" });
+  await expect(courses.getByRole("link", { name: "DSA Foundations" })).toBeVisible();
+  await expect(courses.getByText(/^1 of \d+ chapters$/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Daily challenge" })).toBeVisible();
 
   // ---- Problem ------------------------------------------------------------
   await page.goto("/problems/running-altitude");
@@ -188,9 +193,7 @@ test("a new learner can go from signup to a solved problem", async ({ page }) =>
   await page.goto("/problems");
   // Scoped to the catalogue tables: the filter panel also has a "Solved"
   // control, and it lives in a closed drawer.
-  await expect(
-    page.getByRole("table").getByLabel("Solved").first()
-  ).toBeVisible();
+  await expect(page.getByRole("table").getByLabel("Solved").first()).toBeVisible();
 });
 
 test("typing in the editor drives the submitted code", async ({ page }) => {
@@ -211,7 +214,9 @@ test("typing in the editor drives the submitted code", async ({ page }) => {
 
   await page.getByRole("button", { name: "Run", exact: true }).click();
   await showPane(page, "Results");
-  await expect(page.getByText("Wrong answer").first()).toBeVisible({ timeout: 180_000 });
+  await expect(page.getByText("Wrong answer").first()).toBeVisible({
+    timeout: 180_000,
+  });
   // The typed value reached the executor and came back as the actual output.
   await expect(page.getByText("12345").first()).toBeVisible();
 });
@@ -226,7 +231,9 @@ test("hidden test inputs are never exposed in the results panel", async ({ page 
 
   await page.getByRole("button", { name: "Submit" }).click();
   await showPane(page, "Results");
-  await expect(page.getByText("Wrong answer").first()).toBeVisible({ timeout: 180_000 });
+  await expect(page.getByText("Wrong answer").first()).toBeVisible({
+    timeout: 180_000,
+  });
 
   // Samples show their data; hidden cases must not. "10000 10000 10000" is
   // a hidden input for this problem and must appear nowhere on the page.
@@ -303,12 +310,17 @@ test("stepping the write-pointer visualization compacts the array on screen", as
 test("the command palette searches real content", async ({ page }) => {
   await page.goto("/patterns");
 
-  await page.getByRole("button", { name: /Search/ }).first().click();
+  await page
+    .getByRole("button", { name: /Search/ })
+    .first()
+    .click();
   const input = page.getByPlaceholder(/Search chapters, patterns and problems/);
   await expect(input).toBeVisible();
 
   await input.fill("sliding");
-  await expect(page.getByRole("option", { name: /Sliding Window/ }).first()).toBeVisible({
+  await expect(
+    page.getByRole("option", { name: /Sliding Window/ }).first()
+  ).toBeVisible({
     timeout: 30_000,
   });
 });
@@ -327,7 +339,7 @@ test("an anonymous visitor can read the curriculum but not track progress", asyn
   await expect(
     page.getByRole("link", { name: "Sign in to track progress" })
   ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Mark chapter complete" })
-  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Mark chapter complete" })).toHaveCount(
+    0
+  );
 });

@@ -14,6 +14,12 @@ import {
   Target,
 } from "lucide-react";
 
+import { ActivityCalendarPanel } from "@/components/dashboard/activity-calendar";
+import {
+  CourseProgressPanel,
+  DailyChallengePanel,
+  OpenContestsPanel,
+} from "@/components/dashboard/learner-panels";
 import { Bar, Panel } from "@/components/dashboard/panel";
 import { DifficultyBadge } from "@/components/common/difficulty-badge";
 import { EmptyState } from "@/components/common/empty-state";
@@ -24,6 +30,12 @@ import { requireUser } from "@/lib/auth/session";
 import { hasCampusAccess } from "@/lib/campus-access";
 import { cn, route } from "@/lib/utils";
 import { getDashboardData } from "@/services/dashboard";
+import {
+  getActivityCalendar,
+  getCourseProgress,
+  getDailyForLearner,
+  getOpenContests,
+} from "@/services/learner-activity";
 import { getProgressSummary } from "@/services/progress";
 
 export const metadata: Metadata = {
@@ -63,6 +75,10 @@ export default async function DashboardPage() {
     getProgressSummary(user.id),
     hasCampusAccess(user),
   ]);
+  const calendar = await getActivityCalendar(user.id);
+  const courses = await getCourseProgress(user.id);
+  const daily = await getDailyForLearner(user.id);
+  const contests = await getOpenContests();
 
   const firstName = user.name?.split(" ")[0] ?? null;
 
@@ -130,21 +146,28 @@ export default async function DashboardPage() {
             label="Study time"
             value={formatStudyTime(summary.studySeconds)}
             icon={Clock}
-            hint={`${summary.chaptersCompleted} chapters`}
+            hint={`${summary.chaptersCompleted} chapter${summary.chaptersCompleted === 1 ? "" : "s"}`}
           />
         </div>
       </section>
+
+      <div className="mt-6">
+        <ActivityCalendarPanel calendar={calendar} />
+      </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         {/* ---- Primary column -------------------------------------------- */}
         <div className="min-w-0 space-y-6">
           <WeeklyTargetCard target={data.weeklyTarget} />
+          <CourseProgressPanel courses={courses} />
           <TodaysPracticeCard problems={data.recommendedProblems} />
           <RecentActivityCard submissions={data.recentSubmissions} />
         </div>
 
         {/* ---- Right rail -------------------------------------------------- */}
         <div className="min-w-0 space-y-6">
+          <DailyChallengePanel daily={daily} />
+          <OpenContestsPanel contests={contests} />
           <WeakPatternsCard patterns={data.weakPatterns} />
           <QuizPerformanceCard performance={data.quizPerformance} />
           <TracksCard tracks={data.tracks} campusMember={campusMember} />

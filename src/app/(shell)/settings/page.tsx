@@ -5,7 +5,9 @@ import { PageHeader } from "@/components/common/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { savePublicProfileAction } from "./actions";
+import { AccountData } from "@/components/settings/account-data";
 import { SettingsForm } from "@/components/settings/settings-form";
+import { accountDeletionBlockers, DELETE_PHRASE } from "@/services/account";
 import { requireUser } from "@/lib/auth/session";
 import { emailIsConfigured } from "@/lib/email";
 import { prisma } from "@/lib/db";
@@ -24,6 +26,10 @@ const PROFILE_MESSAGES: Record<string, string> = {
 export default async function SettingsPage({ searchParams }: PageProps<"/settings">) {
   const user = await requireUser("/settings");
   const { profile: profileMessage } = await searchParams;
+  const account = await prisma.user.findUniqueOrThrow({
+    where: { id: user.id },
+    select: { passwordHash: true },
+  });
 
   const profile = await prisma.profile.findUnique({
     where: { userId: user.id },
@@ -111,6 +117,20 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             Update public profile
           </Button>
         </form>
+      </section>
+
+      <section className="mt-8 grid gap-3 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">
+        <div className="lg:pt-4">
+          <h2 className="text-base font-semibold">Your data</h2>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Take a copy, or remove your account for good.
+          </p>
+        </div>
+        <AccountData
+          hasPassword={Boolean(account.passwordHash)}
+          blockers={await accountDeletionBlockers(user.id)}
+          phrase={DELETE_PHRASE}
+        />
       </section>
 
       <section className="mt-8 grid gap-3 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">

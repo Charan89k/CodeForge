@@ -33,7 +33,10 @@ const STATUS_VARIANT = {
 export default async function AdminChapterPage({
   params,
 }: PageProps<"/admin/courses/[courseId]/chapters/[chapterId]">) {
-  await requireAdmin();
+  const admin = await requireAdmin();
+  // Mirrors the service's rule: anyone who wrote or edited a version cannot review it.
+  const wroteIt = (revision: { authorId: string; editorIds: string[] }) =>
+    revision.authorId === admin.id || revision.editorIds.includes(admin.id);
   const { courseId, chapterId } = await params;
   const chapter = await getChapterForEditing(chapterId);
   if (!chapter || chapter.section.course.id !== courseId) notFound();
@@ -204,8 +207,11 @@ export default async function AdminChapterPage({
                   </Badge>
                   <span className="text-muted-foreground">{revision.title}</span>
                   <span className="ml-auto font-mono text-xs text-subtle-foreground">
-                    {revision.author.email} ·{" "}
-                    {revision.updatedAt.toISOString().slice(0, 16).replace("T", " ")}{" "}
+                    {revision.author.email}
+                    {revision.lastEditor &&
+                      revision.lastEditor.email !== revision.author.email &&
+                      `, last edited by ${revision.lastEditor.email}`}{" "}
+                    · {revision.updatedAt.toISOString().slice(0, 16).replace("T", " ")}{" "}
                     UTC
                   </span>
                 </div>
@@ -233,7 +239,12 @@ export default async function AdminChapterPage({
                       className="[&>div]:mt-0"
                     />
                   )}
-                  {revision.status === "IN_REVIEW" && (
+                  {revision.status === "IN_REVIEW" && wroteIt(revision) && (
+                    <p className="text-xs text-muted-foreground">
+                      Waiting for a different admin to review your version.
+                    </p>
+                  )}
+                  {revision.status === "IN_REVIEW" && !wroteIt(revision) && (
                     <>
                       <CmsForm
                         action={publishRevisionAction.bind(null, revision.id)}

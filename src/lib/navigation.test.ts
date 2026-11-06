@@ -1,6 +1,27 @@
 import { describe, expect, it } from "vitest";
 
-import { navForViewer, productForPath } from "./navigation";
+import { navForViewer, productForPath, surfaceForPath } from "./navigation";
+
+describe("surfaceForPath", () => {
+  it.each([
+    ["/learn", "learn"],
+    ["/learn/dsa/foundations/arrays/traversal", "learn"],
+    ["/dashboard", "learn"],
+    ["/problems", "learn"],
+    ["/system-design", "learn"],
+    ["/problems/two-pointers", "workspace"],
+    ["/system-design/chat", "workspace"],
+    ["/lld/parking", "workspace"],
+    ["/visualize", "lab"],
+    ["/visualize/binary-search", "lab"],
+    ["/campus/x/placement", "campus"],
+    ["/interviews", "campus"],
+    ["/admin/courses", "admin"],
+    ["/administrator", "learn"],
+  ])("%s is %s", (path, surface) => {
+    expect(surfaceForPath(path)).toBe(surface);
+  });
+});
 
 /**
  * The header menus, mobile sheet, rail and command palette all list

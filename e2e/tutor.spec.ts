@@ -124,9 +124,7 @@ test.afterAll(async () => {
 
 // ---------------------------------------------------------------------------
 
-test("an ordinary account reaches the tutor, with nothing to buy", async ({
-  page,
-}) => {
+test("an ordinary account reaches the tutor, with nothing to buy", async ({ page }) => {
   // Tech Epitome is free. A plain account - no plan, no upgrade, nothing
   // purchased - must land in the working tutor, not in an offer. This test
   // exists because the previous one asserted the opposite.
@@ -139,9 +137,7 @@ test("an ordinary account reaches the tutor, with nothing to buy", async ({
   }
 });
 
-test("a signed-out visitor is asked to sign in, never to upgrade", async ({
-  page,
-}) => {
+test("a signed-out visitor is asked to sign in, never to upgrade", async ({ page }) => {
   // The launcher is deliberately visible signed out: the visitor should be
   // able to see the tutor exists. What they must never see is a price.
   await openChapter(page);
@@ -151,12 +147,12 @@ test("a signed-out visitor is asked to sign in, never to upgrade", async ({
     page.getByRole("heading", { name: "Sign in to use the tutor" })
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /plans|pricing|upgrade/i })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /plans|pricing|upgrade/i })).toHaveCount(
+    0
+  );
 });
 
-test("chapter tutor: shows chapter context and streams an answer", async ({
-  page,
-}) => {
+test("chapter tutor: shows chapter context and streams an answer", async ({ page }) => {
   const email = await signUpAsLearner(page, "chapter");
   await openChapter(page);
   await openTutor(page);
@@ -183,9 +179,7 @@ test("chapter tutor: shows chapter context and streams an answer", async ({
     .toBeGreaterThanOrEqual(2);
 });
 
-test("chapter tutor: a quick action sends a structured request", async ({
-  page,
-}) => {
+test("chapter tutor: a quick action sends a structured request", async ({ page }) => {
   await signUpAsLearner(page, "quickaction");
   await openChapter(page);
   await openTutor(page);
@@ -225,17 +219,13 @@ test("problem tutor: shows pattern context and escalates hints one rung at a tim
   await expect(transcript.getByText(/Hint 4 of 4/)).toHaveCount(0);
 });
 
-test("problem tutor: asking to be told jumps to the final rung", async ({
-  page,
-}) => {
+test("problem tutor: asking to be told jumps to the final rung", async ({ page }) => {
   await signUpAsLearner(page, "giveup");
 
   await openProblem(page);
   await openTutor(page);
 
-  await page
-    .getByLabel("Message the tutor")
-    .fill("just tell me the answer");
+  await page.getByLabel("Message the tutor").fill("just tell me the answer");
   await page.getByRole("button", { name: "Send message" }).click();
 
   // A free-text message is a GENERAL_QUESTION, which never moves the
@@ -262,9 +252,9 @@ test("code-aware tutor: the failing run reaches the tutor", async ({ page }) => 
 
   await page.getByRole("button", { name: "Run", exact: true }).click();
   await showPane(page, "Results");
-  await expect(page.getByText(/passed|failed|error/i).first()).toBeVisible({
-    timeout: 120_000,
-  });
+  // The run's own summary, not any text on the page that happens to say
+  // "error": the tutor only receives a run that has finished.
+  await expect(page.getByText(/^\d+\/\d+ tests$/)).toBeVisible({ timeout: 120_000 });
 
   await openTutor(page);
   await page.getByRole("button", { name: "Why is my solution wrong?" }).first().click();
@@ -417,8 +407,7 @@ test("the tutor streams without console or hydration errors", async ({ page }) =
   });
 
   const real = errors.filter(
-    (message) =>
-      !message.includes("_next/hmr") && !message.includes("WebSocket")
+    (message) => !message.includes("_next/hmr") && !message.includes("WebSocket")
   );
   expect(real, real.join("\n")).toEqual([]);
 

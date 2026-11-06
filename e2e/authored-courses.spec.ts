@@ -51,11 +51,24 @@ test("a learner finds an authored course, works a lesson and keeps their progres
   const adminEmail = `e2e-course-admin-${unique()}@techepitome.test`;
   await signUp(await adminContext.newPage(), adminEmail);
   await makeAdmin(adminEmail);
+  const reviewerEmail = `e2e-course-reviewer-${unique()}@techepitome.test`;
+  const reviewerContext = await browser.newContext();
+  await signUp(await reviewerContext.newPage(), reviewerEmail);
+  await makeAdmin(reviewerEmail);
   await adminContext.close();
-  author(adminEmail, "--publish");
+  await reviewerContext.close();
+
+  // Publishing takes a second person.
+  expect(() => author(adminEmail, "--publish")).toThrow(/--reviewer/);
+  expect(() => author(adminEmail, "--publish", "--reviewer", adminEmail)).toThrow(
+    /different/
+  );
+  author(adminEmail, "--publish", "--reviewer", reviewerEmail);
 
   // Running it again changes nothing that is already published.
-  expect(author(adminEmail, "--publish")).toContain('"unchanged":9');
+  expect(author(adminEmail, "--publish", "--reviewer", reviewerEmail)).toContain(
+    '"unchanged":9'
+  );
 
   // Search, then two filters.
   await page.goto("/learn");
