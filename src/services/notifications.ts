@@ -36,6 +36,7 @@ const PREFERENCE_FOR: Record<NotificationKind, string | null> = {
   REVIEW_DUE: "notifyReviewDue",
   INTERVIEW_GRADED: "notifyInterviewGraded",
   MILESTONE: "notifyMilestones",
+  COMMUNITY: "notifyCommunity",
   // Security and account events are not a preference. A learner who turned
   // these off would stop hearing that their password changed.
   ACCOUNT: null,
@@ -79,6 +80,7 @@ export async function notify(params: {
         notifyReviewDue: true,
         notifyInterviewGraded: true,
         notifyMilestones: true,
+        notifyCommunity: true,
       },
     });
     // No profile means no preferences have been expressed; the defaults

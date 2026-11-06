@@ -300,4 +300,12 @@ export const RATE_LIMITS = {
   CAMPUS_ATTEMPT: { limit: 30, windowMs: 60 * 60_000 },
   /** New public share links, per learner. */
   SHARE_LINK: { limit: 10, windowMs: 60 * 60_000 },
+  /** Community: new threads, per person. Low, because each one is a page. */
+  COMMUNITY_THREAD: { limit: 5, windowMs: 60 * 60_000 },
+  /** Community replies, per person. */
+  COMMUNITY_REPLY: { limit: 30, windowMs: 60 * 60_000 },
+  /** Community votes, per person. A burst means a script, not a reader. */
+  COMMUNITY_VOTE: { limit: 120, windowMs: 10 * 60_000 },
+  /** Reports, blocks and appeals, per person. */
+  COMMUNITY_SAFETY: { limit: 30, windowMs: 60 * 60_000 },
 } as const;
