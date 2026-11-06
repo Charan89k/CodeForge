@@ -164,4 +164,14 @@ describe("cancelContest", () => {
     ).resolves.not.toBeNull();
     await expect(cancelContest(admin, `${tag}-nope`)).resolves.toBe("missing");
   });
+
+  it("keeps a contest that started after the phase was read", async () => {
+    // A stale clock makes the first check pass; the delete itself must still refuse.
+    await expect(cancelContest(admin, slugs.ended, new Date(0))).resolves.toBe(
+      "started"
+    );
+    await expect(
+      prisma.contest.findUnique({ where: { slug: slugs.ended } })
+    ).resolves.not.toBeNull();
+  });
 });

@@ -186,8 +186,12 @@ export async function cancelContest(
   });
   if (!contest) return "missing";
   if (contestPhase(contest, now) !== "upcoming") return "started";
-  await prisma.$transaction(async (tx) => {
-    await tx.contest.delete({ where: { id: contest.id } });
+  return prisma.$transaction(async (tx) => {
+    // Re-checked in the delete itself, so a contest that starts meanwhile survives.
+    const { count } = await tx.contest.deleteMany({
+      where: { id: contest.id, startsAt: { gt: new Date() } },
+    });
+    if (count === 0) return "started";
     await tx.auditLog.create({
       data: {
         actorId: admin.id,
@@ -198,8 +202,8 @@ export async function cancelContest(
         summary: `Cancelled contest ${slug}`,
       },
     });
+    return "cancelled";
   });
-  return "cancelled";
 }
 
 export const contestInputSchema = z
