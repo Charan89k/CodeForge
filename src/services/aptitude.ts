@@ -205,10 +205,13 @@ export async function publishAptitudeQuestion(admin: Admin, id: string): Promise
   if (question.authorId === admin.id) {
     throw new AptitudeReviewError("A different admin must review your own question.");
   }
-  await prisma.aptitudeQuestion.update({
-    where: { id },
+  // Still a draft when written, so a concurrent archive is never undone.
+  const { count } = await prisma.aptitudeQuestion.updateMany({
+    where: { id, status: "DRAFT" },
     data: { status: "PUBLISHED", reviewedById: admin.id },
   });
+  if (count === 0)
+    throw new AptitudeReviewError("That question is not waiting for review.");
   await audit(admin, "aptitude.published", id, "Published an aptitude question");
 }
 
