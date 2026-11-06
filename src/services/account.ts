@@ -46,6 +46,9 @@ const OWN_ROWS = {
   CohortMember: (args: FindArgs) => prisma.cohortMember.findMany(args),
   PlacementRecord: (args: FindArgs) => prisma.placementRecord.findMany(args),
   PlacementApplication: (args: FindArgs) => prisma.placementApplication.findMany(args),
+  CommunityVote: (args: FindArgs) => prisma.communityVote.findMany(args),
+  CommunityModerator: (args: FindArgs) => prisma.communityModerator.findMany(args),
+  CommunityRestriction: (args: FindArgs) => prisma.communityRestriction.findMany(args),
 };
 
 type FindArgs = { where: { userId: string }; take: number };
@@ -123,6 +126,31 @@ export async function exportAccountData(
     },
   });
 
+  // Community rows name their owner differently, so they are read here.
+  const community = {
+    threads: await prisma.communityThread.findMany({
+      where: { authorId: userId },
+      take: EXPORT_ROW_LIMIT,
+    }),
+    replies: await prisma.communityPost.findMany({
+      where: { authorId: userId },
+      take: EXPORT_ROW_LIMIT,
+    }),
+    reportsYouMade: await prisma.communityReport.findMany({
+      where: { reporterId: userId },
+      take: EXPORT_ROW_LIMIT,
+    }),
+    appeals: await prisma.communityAppeal.findMany({
+      where: { authorId: userId },
+      take: EXPORT_ROW_LIMIT,
+    }),
+    peopleYouBlocked: await prisma.communityBlock.findMany({
+      where: { blockerId: userId },
+      select: { blockedId: true, createdAt: true },
+      take: EXPORT_ROW_LIMIT,
+    }),
+  };
+
   return withoutSecrets({
     exportedAt: new Date().toISOString(),
     about:
@@ -133,6 +161,7 @@ export async function exportAccountData(
     tutorConversations,
     interviews,
     examAttempts,
+    community,
   }) as Record<string, unknown>;
 }
 

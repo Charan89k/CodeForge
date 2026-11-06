@@ -72,6 +72,7 @@ export async function updateSettingsAction(
     notifyReviewDue: formData.get("notifyReviewDue") === "on",
     notifyInterviewGraded: formData.get("notifyInterviewGraded") === "on",
     notifyMilestones: formData.get("notifyMilestones") === "on",
+    notifyCommunity: formData.get("notifyCommunity") === "on",
     emailReviewReminders: formData.get("emailReviewReminders") === "on",
   });
 
@@ -92,6 +93,7 @@ export async function updateSettingsAction(
     notifyReviewDue,
     notifyInterviewGraded,
     notifyMilestones,
+    notifyCommunity,
     emailReviewReminders,
   } = parsed.data;
 
@@ -102,6 +104,7 @@ export async function updateSettingsAction(
     notifyReviewDue,
     notifyInterviewGraded,
     notifyMilestones,
+    notifyCommunity,
     emailReviewReminders,
   };
 

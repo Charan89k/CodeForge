@@ -39,6 +39,7 @@ export type SettingsFormValues = {
   notifyReviewDue: boolean;
   notifyInterviewGraded: boolean;
   notifyMilestones: boolean;
+  notifyCommunity: boolean;
   emailReviewReminders: boolean;
 };
 
@@ -166,6 +167,13 @@ export function SettingsForm({
           label="Milestones"
           description="The occasional note when you pass a round number of solved problems. Deliberately rare."
           defaultChecked={values.notifyMilestones}
+        />
+
+        <ToggleRow
+          name="notifyCommunity"
+          label="Community mentions and replies"
+          description="When someone mentions your username or replies to your thread. Nobody you have blocked can trigger one."
+          defaultChecked={values.notifyCommunity}
         />
       </SettingsSection>
 

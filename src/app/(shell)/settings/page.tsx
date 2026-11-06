@@ -41,6 +41,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
       notifyReviewDue: true,
       notifyInterviewGraded: true,
       notifyMilestones: true,
+      notifyCommunity: true,
       emailReviewReminders: true,
       username: true,
       publicProfile: true,
@@ -68,6 +69,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             notifyReviewDue: profile?.notifyReviewDue ?? true,
             notifyInterviewGraded: profile?.notifyInterviewGraded ?? true,
             notifyMilestones: profile?.notifyMilestones ?? true,
+            notifyCommunity: profile?.notifyCommunity ?? true,
             emailReviewReminders: profile?.emailReviewReminders ?? false,
           }}
         />
