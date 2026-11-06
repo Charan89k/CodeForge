@@ -20,7 +20,8 @@ const inlineNodeSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("link"),
     value: z.string(),
-    href: z.string(),
+    // Web links or paths on this site only: no javascript:, data: or protocol-relative //host.
+    href: z.string().regex(/^(https?:\/\/|\/(?!\/))/),
   }),
 ]);
 

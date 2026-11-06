@@ -25,6 +25,23 @@ describe("parseInline", () => {
     ).toBe(true);
   });
 
+  it("does not make a link to another host from a //host path", () => {
+    expect(parseInline("[x](//evil.test/a)").every((n) => n.type !== "link")).toBe(
+      true
+    );
+  });
+
+  it.each(["javascript:alert(1)", "data:text/html,x", "//evil.test"])(
+    "refuses a %s link in stored blocks",
+    (href) => {
+      const block = {
+        type: "paragraph",
+        content: [{ type: "link", value: "x", href }],
+      };
+      expect(contentDocumentSchema.safeParse([block]).success).toBe(false);
+    }
+  );
+
   it("leaves raw HTML as text for React to escape", () => {
     expect(parseInline("<script>alert(1)</script>")).toEqual([
       { type: "text", value: "<script>alert(1)</script>" },

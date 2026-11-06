@@ -14,7 +14,7 @@ import type { CalloutTone, ContentBlock, InlineNode } from "@/types/content";
  *                              :::quiz quiz-slug
  */
 const INLINE =
-  /(`[^`]+`)|(\*\*[^*]+\*\*)|(\*[^*]+\*)|(\[[^\]]+\]\((?:https?:\/\/|\/)[^)\s]*\))/g;
+  /(`[^`]+`)|(\*\*[^*]+\*\*)|(\*[^*]+\*)|(\[[^\]]+\]\((?:https?:\/\/|\/(?!\/))[^)\s]*\))/g;
 
 export function parseInline(text: string): InlineNode[] {
   const nodes: InlineNode[] = [];
