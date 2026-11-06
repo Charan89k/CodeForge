@@ -81,6 +81,21 @@ enum Track {
   SYSTEM_DESIGN
   LLD
   BEHAVIORAL
+  /// Courses authored in the CMS, served under /learn/courses.
+  GENERAL
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum RevisionStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  REJECTED
 }
 
 enum ContentStatus {
@@ -390,6 +405,8 @@ model User {
   submissions       Submission[]
   contestEntries    ContestEntry[]
   contestsCreated   Contest[]
+  revisionsAuthored ChapterRevision[]        @relation("RevisionAuthor")
+  revisionsReviewed ChapterRevision[]        @relation("RevisionReviewer")
   aptitudeAttempts  AptitudeAttempt[]
   quizAttempts      QuizAttempt[]
   bookmarks         Bookmark[]
@@ -534,6 +551,16 @@ model Course {
   order          Int           @default(0)
   estimatedHours Int           @default(0)
 
+  /// Library grouping, such as "Programming" or "Web Development".
+  category      String?
+  level         CourseLevel @default(BEGINNER)
+  outcomes      String[]
+  prerequisites String[]
+  featured      Boolean     @default(false)
+  /// Null means written for Tech Epitome. Otherwise the terms it is used under.
+  license       String?
+  attribution   String?     @db.Text
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -544,6 +571,38 @@ model Course {
   @@index([track, status, order])
   @@index([status])
   @@map("courses")
+}
+
+/// Every saved version of a chapter. The chapter row only ever holds what is
+/// published, so learners never see a draft and old versions can be restored.
+model ChapterRevision {
+  id             String         @id @default(cuid())
+  chapterId      String
+  number         Int
+  title          String
+  summary        String?        @db.Text
+  /// The authored source. Null for a revision edited as raw blocks.
+  markdown       String?        @db.Text
+  content        Json
+  objectives     String[]
+  keyTakeaways   String[]
+  readingMinutes Int            @default(5)
+  difficulty     Difficulty     @default(EASY)
+  status         RevisionStatus @default(DRAFT)
+  authorId       String
+  reviewerId     String?
+  reviewNote     String?        @db.Text
+  publishedAt    DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  chapter  Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  author   User    @relation("RevisionAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  reviewer User?   @relation("RevisionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@unique([chapterId, number])
+  @@index([status])
+  @@map("chapter_revisions")
 }
 
 model CourseSection {
@@ -597,11 +656,12 @@ model Chapter {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  section  CourseSection         @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  patterns ChapterPattern[]
-  problems ChapterProblem[]
-  quizzes  Quiz[]
-  progress UserChapterProgress[]
+  revisions ChapterRevision[]
+  section   CourseSection         @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  patterns  ChapterPattern[]
+  problems  ChapterProblem[]
+  quizzes   Quiz[]
+  progress  UserChapterProgress[]
 
   cohortAssignments CohortAssignment[]
 

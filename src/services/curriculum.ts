@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 
-import type {Difficulty, Track} from "@/generated/prisma/enums";
+import type { Difficulty, Track } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
 import { chapterHref } from "@/lib/tracks";
 
@@ -52,6 +52,11 @@ export type CourseSummary = {
 };
 
 export type CourseDetail = CourseSummary & {
+  level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+  outcomes: string[];
+  prerequisites: string[];
+  license: string | null;
+  attribution: string | null;
   sections: SectionSummary[];
 };
 
@@ -118,6 +123,11 @@ export const getCourse = cache(
     const course = await prisma.course.findFirst({
       where: { slug, status: "PUBLISHED" },
       select: {
+        level: true,
+        outcomes: true,
+        prerequisites: true,
+        license: true,
+        attribution: true,
         id: true,
         slug: true,
         title: true,
@@ -163,9 +173,7 @@ export const getCourse = cache(
           select: { chapterId: true, status: true, percent: true },
         })
       : [];
-    const progressByChapter = new Map(
-      progressRows.map((row) => [row.chapterId, row])
-    );
+    const progressByChapter = new Map(progressRows.map((row) => [row.chapterId, row]));
 
     const sections: SectionSummary[] = course.sections.map((section) => {
       const chapters: ChapterSummary[] = section.chapters.map((chapter) => {
@@ -205,6 +213,11 @@ export const getCourse = cache(
       description: course.description,
       track: course.track,
       icon: course.icon,
+      level: course.level,
+      outcomes: course.outcomes,
+      prerequisites: course.prerequisites,
+      license: course.license,
+      attribution: course.attribution,
       estimatedHours: course.estimatedHours,
       totalChapters: allChapters.length,
       completedChapters: allChapters.filter((c) => c.status === "COMPLETED").length,
@@ -396,9 +409,7 @@ async function findNeighbours(
   );
   if (index === -1) return { previous: null, next: null };
 
-  const toNeighbour = (
-    c: (typeof all)[number] | undefined
-  ): ChapterNeighbour =>
+  const toNeighbour = (c: (typeof all)[number] | undefined): ChapterNeighbour =>
     c
       ? {
           title: c.title,
@@ -571,9 +582,7 @@ export async function getLinkedProblems(
 }
 
 /** Pattern display names, for recognition drills. */
-export async function getPatternNames(
-  slugs: string[]
-): Promise<Map<string, string>> {
+export async function getPatternNames(slugs: string[]): Promise<Map<string, string>> {
   if (slugs.length === 0) return new Map();
 
   const rows = await prisma.pattern.findMany({
@@ -613,7 +622,12 @@ export const CATALOGUE_PER_PAGE = 20;
 export async function searchCatalogue(
   filters: CatalogueFilters,
   userId?: string
-): Promise<{ items: CatalogueChapter[]; total: number; page: number; totalPages: number }> {
+): Promise<{
+  items: CatalogueChapter[];
+  total: number;
+  page: number;
+  totalPages: number;
+}> {
   const search = filters.search?.trim().slice(0, 100);
   const where = {
     status: "PUBLISHED" as const,
@@ -663,7 +677,9 @@ export async function searchCatalogue(
           course: { select: { slug: true, title: true, track: true } },
         },
       },
-      progress: userId ? { where: { userId }, select: { status: true }, take: 1 } : false,
+      progress: userId
+        ? { where: { userId }, select: { status: true }, take: 1 }
+        : false,
     },
   });
 
@@ -676,7 +692,12 @@ export async function searchCatalogue(
     track: row.section.course.track,
     courseTitle: row.section.course.title,
     sectionTitle: row.section.title,
-    href: chapterHref(row.section.course.track, row.section.course.slug, row.section.slug, row.slug),
+    href: chapterHref(
+      row.section.course.track,
+      row.section.course.slug,
+      row.section.slug,
+      row.slug
+    ),
     status: (row.progress?.[0]?.status ?? "NOT_STARTED") as CatalogueChapter["status"],
   }));
 

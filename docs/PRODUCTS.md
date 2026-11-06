@@ -40,7 +40,8 @@ from the database on every request, so changing a URL grants nothing. See
 | Contests and standings | Partial | Admin-created, scored ICPC-style. No ratings or virtual contests. Needs Submit |
 | Leaderboard and public profiles | Live | Opt-in; nobody is listed by default |
 | AI tutor | Needs configuration | Requires an AI provider key |
-| Course catalogue beyond the 3 courses | Planned | |
+| Course CMS: authoring, review, publishing, version history | Live | Admin-only. Markdown lessons, or raw blocks for older chapters |
+| Course catalogue beyond the 3 courses | Partial | The CMS can publish them; no new courses are written yet |
 | SQL problems and playground | Planned | |
 | Code playground | Planned | |
 | Discussions and community | Planned | |

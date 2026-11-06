@@ -39,6 +39,14 @@ const TRACK_COPY: Record<
     metaDescription:
       "Reason about large systems: scale, latency, replication, partitioning, consistency and the trade-offs between them.",
   },
+  GENERAL: {
+    heading: "More courses",
+    description:
+      "Programming, computer science and career courses, written for Tech Epitome.",
+    metaTitle: "Courses",
+    metaDescription:
+      "Original courses in programming, computer science and career skills.",
+  },
   LLD: {
     heading: "Low-Level Design",
     description:
@@ -86,19 +94,19 @@ export default async function TrackRoadmapPage({
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
       <header className="max-w-3xl">
-        <p className="text-brand-400 text-[0.68rem] font-medium tracking-wider uppercase">
+        <p className="text-[0.68rem] font-medium tracking-wider text-brand-400 uppercase">
           Learn
         </p>
         <h1 className="tracking-headline mt-2 text-2xl font-bold sm:text-3xl">
           {copy.heading}
         </h1>
-        <p className="text-muted-foreground mt-2 text-sm leading-relaxed text-pretty sm:text-base">
+        <p className="mt-2 text-sm leading-relaxed text-pretty text-muted-foreground sm:text-base">
           {copy.description}
         </p>
       </header>
 
       {courses.length === 0 ? (
-        <div className="border-border bg-card mt-8 rounded-xl border">
+        <div className="mt-8 rounded-xl border border-border bg-card">
           <EmptyState
             icon={BookOpen}
             title="No published courses yet"
@@ -110,9 +118,7 @@ export default async function TrackRoadmapPage({
           {courses.map((course, courseIndex) => {
             const percent =
               course.totalChapters > 0
-                ? Math.round(
-                    (course.completedChapters / course.totalChapters) * 100
-                  )
+                ? Math.round((course.completedChapters / course.totalChapters) * 100)
                 : 0;
             const sections = details[courseIndex]?.sections ?? [];
 
@@ -120,23 +126,23 @@ export default async function TrackRoadmapPage({
               <section key={course.id} aria-label={course.title}>
                 <Link
                   href={route(`/learn/${segment}/${course.slug}`)}
-                  className="border-border bg-card hover:border-brand-500/40 group flex flex-col overflow-hidden rounded-xl border transition-colors sm:flex-row"
+                  className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-brand-500/40 sm:flex-row"
                 >
                   <MiniDiagram
                     kind={diagramFor(course.slug, courseIndex)}
-                    className="border-border h-32 shrink-0 border-b sm:h-auto sm:w-56 sm:border-r sm:border-b-0"
+                    className="h-32 shrink-0 border-b border-border sm:h-auto sm:w-56 sm:border-r sm:border-b-0"
                   />
                   <div className="min-w-0 flex-1 p-5 sm:p-6">
-                    <h2 className="tracking-headline group-hover:text-brand-200 text-lg font-semibold transition-colors sm:text-xl">
+                    <h2 className="tracking-headline text-lg font-semibold transition-colors group-hover:text-brand-200 sm:text-xl">
                       {course.title}
                     </h2>
                     {course.subtitle && (
-                      <p className="text-muted-foreground mt-1 text-sm">
+                      <p className="mt-1 text-sm text-muted-foreground">
                         {course.subtitle}
                       </p>
                     )}
 
-                    <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                       <span className="tabular-nums">
                         {course.completedChapters}/{course.totalChapters} chapters
                       </span>
@@ -156,7 +162,7 @@ export default async function TrackRoadmapPage({
 
                     <div className="mt-4 flex items-center gap-3">
                       <div
-                        className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full"
+                        className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"
                         role="progressbar"
                         aria-valuenow={percent}
                         aria-valuemin={0}
@@ -164,14 +170,14 @@ export default async function TrackRoadmapPage({
                         aria-label={`${course.completedChapters} of ${course.totalChapters} chapters complete`}
                       >
                         <div
-                          className="bg-brand-500 h-full rounded-full"
+                          className="h-full rounded-full bg-brand-500"
                           style={{ width: `${percent}%` }}
                         />
                       </div>
-                      <span className="text-muted-foreground font-mono text-xs tabular-nums">
+                      <span className="font-mono text-xs text-muted-foreground tabular-nums">
                         {percent}%
                       </span>
-                      <span className="text-brand-300 flex shrink-0 items-center gap-1 text-sm font-medium">
+                      <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-brand-300">
                         {course.completedChapters > 0 ? "Continue" : "Open course"}
                         <ArrowRight
                           className="size-4 transition-transform group-hover:translate-x-0.5"
@@ -200,32 +206,32 @@ export default async function TrackRoadmapPage({
                               href={route(
                                 `/learn/${segment}/${course.slug}#section-${section.slug}`
                               )}
-                              className="border-border bg-card hover:border-brand-500/40 group flex h-full overflow-hidden rounded-xl border transition-colors sm:flex-col"
+                              className="group flex h-full overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-brand-500/40 sm:flex-col"
                             >
                               <MiniDiagram
                                 kind={diagramFor(section.slug, sectionIndex)}
-                                className="border-border w-24 shrink-0 border-r sm:h-28 sm:w-full sm:border-r-0 sm:border-b"
+                                className="w-24 shrink-0 border-r border-border sm:h-28 sm:w-full sm:border-r-0 sm:border-b"
                               />
                               <div className="flex min-w-0 flex-1 flex-col p-4">
-                                <p className="text-muted-foreground font-mono text-[0.65rem] tabular-nums">
+                                <p className="font-mono text-[0.65rem] text-muted-foreground tabular-nums">
                                   {String(sectionIndex + 1).padStart(2, "0")}
                                 </p>
-                                <p className="group-hover:text-brand-200 mt-0.5 truncate text-sm font-semibold transition-colors">
+                                <p className="mt-0.5 truncate text-sm font-semibold transition-colors group-hover:text-brand-200">
                                   {section.title}
                                 </p>
                                 {section.summary && (
-                                  <p className="text-muted-foreground mt-1 line-clamp-2 text-xs leading-snug">
+                                  <p className="mt-1 line-clamp-2 text-xs leading-snug text-muted-foreground">
                                     {section.summary}
                                   </p>
                                 )}
                                 <div className="mt-auto flex items-center gap-2 pt-3">
-                                  <div className="bg-muted h-1 flex-1 overflow-hidden rounded-full">
+                                  <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
                                     <div
-                                      className="bg-brand-500 h-full rounded-full"
+                                      className="h-full rounded-full bg-brand-500"
                                       style={{ width: `${sectionPercent}%` }}
                                     />
                                   </div>
-                                  <span className="text-muted-foreground font-mono text-[0.65rem] tabular-nums">
+                                  <span className="font-mono text-[0.65rem] text-muted-foreground tabular-nums">
                                     {section.completedChapters}/{section.totalChapters}
                                   </span>
                                 </div>
@@ -244,10 +250,10 @@ export default async function TrackRoadmapPage({
       )}
 
       {!user && courses.length > 0 && (
-        <div className="border-border bg-card mt-10 flex flex-col items-start gap-3 rounded-xl border p-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-muted-foreground text-sm">
-            Create an account to track progress, save notes and get revision
-            scheduled for you.
+        <div className="mt-10 flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Create an account to track progress, save notes and get revision scheduled
+            for you.
           </p>
           <Button asChild size="sm">
             <Link href="/signup">Create account</Link>

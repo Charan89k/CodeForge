@@ -30,6 +30,7 @@ const TABS = [
   { href: "/admin/users", label: "Users" },
   { href: "/admin/institutions", label: "Institutions" },
   { href: "/admin/content", label: "Content" },
+  { href: "/admin/courses", label: "Courses" },
   { href: "/admin/contests", label: "Contests" },
   { href: "/admin/ai", label: "AI usage" },
   { href: "/admin/audit", label: "Audit log" },

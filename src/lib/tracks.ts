@@ -18,6 +18,7 @@ export const TRACK_SEGMENTS = {
   SYSTEM_DESIGN: "system-design",
   LLD: "lld",
   BEHAVIORAL: "behavioral",
+  GENERAL: "courses",
 } as const satisfies Record<Track, string>;
 
 export type TrackSegment = (typeof TRACK_SEGMENTS)[Track];
@@ -41,6 +42,7 @@ export const TRACK_LABELS: Record<Track, string> = {
   SYSTEM_DESIGN: "System Design",
   LLD: "Low-Level Design",
   BEHAVIORAL: "Behavioral",
+  GENERAL: "More courses",
 };
 
 /**
@@ -50,7 +52,7 @@ export const TRACK_LABELS: Record<Track, string> = {
  * and mock interviews, not by reading chapters, so a reader route for it
  * would be an empty promise.
  */
-export const READER_TRACKS: Track[] = ["DSA", "SYSTEM_DESIGN", "LLD"];
+export const READER_TRACKS: Track[] = ["DSA", "SYSTEM_DESIGN", "LLD", "GENERAL"];
 
 export function chapterHref(
   track: Track,
