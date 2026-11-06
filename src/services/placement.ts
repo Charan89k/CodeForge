@@ -156,7 +156,9 @@ export async function importPlacementRecords(
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
-  if (lines[0]?.toLowerCase().startsWith("email,")) lines.shift();
+  // Errors name the file's own line, so a header row counts.
+  const firstLine = lines[0]?.toLowerCase().startsWith("email,") ? 2 : 1;
+  if (firstLine === 2) lines.shift();
   if (lines.length > 2000) {
     throw new InstitutionError("invalid", "Import at most 2000 rows at a time.");
   }
@@ -170,14 +172,18 @@ export async function importPlacementRecords(
       students.map((s) => [normaliseEmail(s.user.email), s.userId])
     );
     const valid: { userId: string; input: RecordInput }[] = [];
+    const seenOn = new Map<string, number>();
 
     const rows = lines.map((text, i): RecordImportRow => {
       const [email = "", department, batch, cgpa, backlogs, attendance, skills] = text
         .split(",")
         .map((c) => c.trim());
-      const line = i + 1;
+      const line = i + firstLine;
       const userId = byEmail.get(normaliseEmail(email));
       if (!userId) return { line, email, error: "Not an active student here." };
+      const earlier = seenOn.get(userId);
+      if (earlier) return { line, email, error: `Already on line ${earlier}.` };
+      seenOn.set(userId, line);
       const parsed = recordSchema.safeParse({
         department,
         batchYear: Number(batch),
@@ -198,9 +204,52 @@ export async function importPlacementRecords(
     });
 
     if (rows.some((r) => r.error)) return { saved: 0, rows };
-    for (const { userId, input } of valid) await saveRecord(tx, ctx, userId, input);
+    // In batches, not one row at a time: 2,000 single writes outlasted the 5 s
+    // transaction limit locally. Membership was checked above, still in scope.
+    for (let i = 0; i < valid.length; i += IMPORT_BATCH) {
+      const batch = valid.slice(i, i + IMPORT_BATCH);
+      await upsertRecords(tx, ctx, batch);
+      await tx.institutionAuditLog.createMany({
+        data: batch.map(({ userId, input }) => ({
+          institutionId: ctx.institution.id,
+          actorId: ctx.user.id,
+          actorEmail: ctx.user.email,
+          action: "placement.record_saved",
+          targetType: "placement_record",
+          targetId: userId,
+          summary: `Saved placement record: ${input.department}, ${input.batchYear}, CGPA ${input.cgpa}`,
+        })),
+      });
+    }
     return { saved: valid.length, rows };
   });
+}
+
+const IMPORT_BATCH = 500;
+
+/** One statement per batch. Runs as te_tenant, so the record policies still apply. */
+async function upsertRecords(
+  tx: TenantTx,
+  ctx: MemberContext,
+  batch: { userId: string; input: RecordInput }[]
+): Promise<void> {
+  const json = JSON.stringify(
+    batch.map(({ userId, input }) => ({ id: crypto.randomUUID(), userId, ...input }))
+  );
+  await tx.$executeRaw`
+    INSERT INTO "placement_records" ("id", "institutionId", "userId", "department",
+      "batchYear", "cgpa", "backlogs", "attendancePercent", "skills", "updatedById", "updatedAt")
+    SELECT r.id, ${ctx.institution.id}, r."userId", r.department, r."batchYear", r.cgpa,
+      r.backlogs, r."attendancePercent", ARRAY(SELECT jsonb_array_elements_text(r.skills)),
+      ${ctx.user.id}, now() AT TIME ZONE 'UTC'
+    FROM jsonb_to_recordset(${json}::jsonb) AS r(id text, "userId" text, department text,
+      "batchYear" int, cgpa numeric, backlogs int, "attendancePercent" int, skills jsonb)
+    ON CONFLICT ("institutionId", "userId") DO UPDATE SET
+      "department" = EXCLUDED."department", "batchYear" = EXCLUDED."batchYear",
+      "cgpa" = EXCLUDED."cgpa", "backlogs" = EXCLUDED."backlogs",
+      "attendancePercent" = EXCLUDED."attendancePercent", "skills" = EXCLUDED."skills",
+      "updatedById" = EXCLUDED."updatedById", "updatedAt" = EXCLUDED."updatedAt"
+  `;
 }
 
 // --- Recruiter CRM ----------------------------------------------------------
