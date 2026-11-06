@@ -64,7 +64,7 @@ from the database on every request, so changing a URL grants nothing. See
 | Interview preparation tracks and roadmaps | Live | |
 | Voice interviews and recording | Planned | |
 | Proctoring | Planned | Needs a privacy review first |
-| Placement officer role, drives, recruiter CRM, eligibility | Planned | |
+| Placement officer role, drives, recruiter CRM, eligibility, reports and CSV export | Live | Stages move by hand; no interview scheduling, offer letters or recruiter logins |
 | Resume builder | Planned | |
 | Plagiarism detection | Planned | |
 

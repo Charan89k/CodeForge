@@ -16,7 +16,9 @@ import type { InstitutionRole } from "@/generated/prisma/enums";
  */
 export const INSTITUTION_PERMISSIONS = {
   /** See the institution and your own membership. */
-  "institution.view": ["STUDENT", "FACULTY", "INSTITUTION_ADMIN"],
+  "institution.view": ["STUDENT", "FACULTY", "INSTITUTION_ADMIN", "PLACEMENT_OFFICER"],
+  /** Drives, recruiters, student placement records and placement reports. */
+  "placement.manage": ["PLACEMENT_OFFICER", "INSTITUTION_ADMIN"],
   /** See the roster: names, emails, roles and statuses. */
   "members.list": ["FACULTY", "INSTITUTION_ADMIN"],
   /** Invite people; faculty may invite students only (see canInviteRole). */

@@ -4,7 +4,7 @@ export type CampusPortal = "student" | "teacher";
 
 const PORTAL_ROLES: Record<CampusPortal, readonly InstitutionRole[]> = {
   student: ["STUDENT"],
-  teacher: ["FACULTY", "INSTITUTION_ADMIN"],
+  teacher: ["FACULTY", "INSTITUTION_ADMIN", "PLACEMENT_OFFICER"],
 };
 
 export type PortalDecision =

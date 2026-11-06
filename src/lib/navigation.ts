@@ -4,6 +4,7 @@ import {
   Bookmark,
   Building2,
   Boxes,
+  BriefcaseBusiness,
   Calculator,
   CalendarCheck,
   ChartColumn,
@@ -229,7 +230,7 @@ export function productForPath(pathname: string): Product {
 /** The viewer's college, if any: the one faculty work happens in comes first. */
 export type NavCampus = {
   slug: string;
-  role: "STUDENT" | "FACULTY" | "INSTITUTION_ADMIN";
+  role: "STUDENT" | "FACULTY" | "INSTITUTION_ADMIN" | "PLACEMENT_OFFICER";
 };
 
 /**
@@ -260,7 +261,7 @@ function campusNav(viewer: NavViewer): NavGroup[] {
   ];
   if (!member) return groups;
 
-  if (college && college.role !== "STUDENT") {
+  if (college && (college.role === "FACULTY" || college.role === "INSTITUTION_ADMIN")) {
     groups.push({
       label: "Teaching",
       items: [
@@ -313,6 +314,19 @@ function campusNav(viewer: NavViewer): NavGroup[] {
     {
       label: "Placement",
       items: [
+        ...(college
+          ? [
+              {
+                title:
+                  college.role === "STUDENT" || college.role === "FACULTY"
+                    ? "Placement Drives"
+                    : "Placement Office",
+                href: `/campus/${college.slug}/placement`,
+                icon: BriefcaseBusiness,
+                description: "Drives, eligibility, applications and offers",
+              },
+            ]
+          : []),
         {
           title: "Mock Interviews",
           href: "/interviews",

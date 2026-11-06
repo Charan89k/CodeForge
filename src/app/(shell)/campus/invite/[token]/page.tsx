@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 const ROLE = {
   STUDENT: "a student",
   FACULTY: "faculty",
+  PLACEMENT_OFFICER: "a placement officer",
   INSTITUTION_ADMIN: "an administrator",
 } as const;
 

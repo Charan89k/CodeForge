@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
+  BriefcaseBusiness,
   ChevronRight,
   Download,
   Library,
@@ -43,6 +44,7 @@ export const metadata: Metadata = { title: "College" };
 const ROLES: { value: InstitutionRole; label: string }[] = [
   { value: "STUDENT", label: "Student" },
   { value: "FACULTY", label: "Faculty" },
+  { value: "PLACEMENT_OFFICER", label: "Placement officer" },
   { value: "INSTITUTION_ADMIN", label: "Admin" },
 ];
 const roleLabel = (role: InstitutionRole) =>
@@ -87,6 +89,7 @@ export default async function InstitutionPage({
       ["analytics.view", "analytics", "Analytics", LineChart],
       ["members.invite", "import", "Import roster", Upload],
       ["banks.manage", "banks", "Question banks", Library],
+      ["placement.manage", "placement", "Placement office", BriefcaseBusiness],
       ["audit.view", "audit", "Audit log", ScrollText],
     ] as const
   ).filter(([permission]) => can(ctx, permission));

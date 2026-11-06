@@ -24,6 +24,7 @@ describe("institution permissions", () => {
     ["classes.create", [false, true, true, true, false]],
     ["banks.manage", [false, true, true, true, false]],
     ["analytics.view", [false, true, true, true, false]],
+    ["placement.manage", [false, false, true, true, false]],
   ] as const)(
     "%s: student, faculty, inst admin, platform, outsider",
     (permission, expected) => {
@@ -44,7 +45,22 @@ describe("institution permissions", () => {
       "members.invite",
       "members.list",
       "members.manage",
+      "placement.manage",
     ]);
+  });
+
+  it("gives a placement officer the placement office and nothing else of note", () => {
+    const officer: Actor = { role: "PLACEMENT_OFFICER", platformAdmin: false };
+    expect(can(officer, "placement.manage")).toBe(true);
+    expect(can(officer, "institution.view")).toBe(true);
+    for (const permission of [
+      "members.manage",
+      "members.export",
+      "audit.view",
+      "banks.manage",
+    ] as const) {
+      expect(can(officer, permission)).toBe(false);
+    }
   });
 
   it("denies everything to a user with no membership", () => {

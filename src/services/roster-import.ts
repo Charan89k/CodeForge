@@ -36,7 +36,12 @@ import { inviteMember, normaliseEmail, writeAudit } from "./institutions";
 
 export const ROSTER_LIMITS = { maxBytes: 100_000, maxRows: 200 } as const;
 
-const ROLES: InstitutionRole[] = ["STUDENT", "FACULTY", "INSTITUTION_ADMIN"];
+const ROLES: InstitutionRole[] = [
+  "STUDENT",
+  "FACULTY",
+  "INSTITUTION_ADMIN",
+  "PLACEMENT_OFFICER",
+];
 
 export type RosterRow = {
   line: number;
@@ -140,7 +145,10 @@ export async function previewRoster(
       if (seen.has(email)) return row("error", `Duplicate of line ${seen.get(email)}.`);
       seen.set(email, line);
       if (!ROLES.includes(role)) {
-        return row("error", "Role must be STUDENT, FACULTY or INSTITUTION_ADMIN.");
+        return row(
+          "error",
+          "Role must be STUDENT, FACULTY, INSTITUTION_ADMIN or PLACEMENT_OFFICER."
+        );
       }
       if (!canInviteRole(ctx, role)) return row("error", "You cannot grant that role.");
 

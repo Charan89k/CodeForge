@@ -28,6 +28,7 @@ const PREPARATION =
 const ROLE_LABEL = {
   STUDENT: "Student",
   FACULTY: "Faculty",
+  PLACEMENT_OFFICER: "Placement officer",
   INSTITUTION_ADMIN: "Admin",
 } as const;
 
