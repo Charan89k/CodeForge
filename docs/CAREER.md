@@ -130,7 +130,9 @@ notes or colleges.
   - The interview page then says the transcript was deleted.
   - **The job runs only if a scheduler calls it.**
 - **Notes.** Personal notes are unchanged and stay private to their author.
-- **Not covered yet.** Tutor conversations are outside this retention rule.
+- **Tutor conversations.** Learners can read and delete them at `/ai-tutor/history`. The same job deletes
+  those idle for `TUTOR_CONVERSATION_RETENTION_DAYS`, but only when that is set; by default they are kept
+  until the learner deletes them. The retention period is an owner decision.
 
 ## Migration
 

@@ -41,7 +41,7 @@ from the database on every request, so changing a URL grants nothing. See
 | Daily challenge and streak | Live | Solves are recorded only once Submit is configured |
 | Contests and standings | Partial | Admin-created, scored ICPC-style. Your contests shows rank and score. Admins can cancel before the start. No ratings, editing or virtual contests. Needs Submit |
 | Leaderboard and public profiles | Live | Opt-in; nobody is listed by default |
-| AI tutor | Needs configuration | Requires an AI provider key |
+| AI tutor | Needs configuration | Requires an AI provider key. Past conversations can be read, rated and deleted at `/ai-tutor/history` |
 | Course CMS: authoring, review, publishing, version history | Live | Admin-only. Markdown lessons, or raw blocks for older chapters. An author cannot approve their own version, so publishing needs two admins. Knowledge checks are written with `npm run courses:author`; there is no screen for them, and one cannot be replaced once live |
 | Download your data, delete your account | Live | From `/settings`. Deletion is refused for platform admins, authors, and anyone with college records, pending an approved privacy policy |
 | Original courses | Partial | Programming Foundations, Database Foundations and Core Algorithms: 27 lessons, 27 knowledge checks, every example run by a test. Written and tested; they reach a site only when an operator runs `npm run courses:author` there. More subjects are not written yet |
