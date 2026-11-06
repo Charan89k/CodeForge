@@ -340,7 +340,7 @@ export const APTITUDE_TOPICS: readonly AptitudeTopic[] = [
       {
         id: "pr4",
         prompt:
-          "A loop starts with i = 1 and doubles i each pass, stopping once i reaches 64. How many passes run?",
+          "A loop starts with i = 1 and doubles i each pass, running only while i is below 64. How many passes run?",
         options: ["5", "6", "7", "64"],
         answer: 1,
         explanation: "1, 2, 4, 8, 16 and 32 are below 64, so it runs 6 times.",
