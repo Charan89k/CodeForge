@@ -43,6 +43,7 @@ export function AptitudeSet({
     start(async () => {
       try {
         const graded = await submitAptitudeAction(topic, difficulty, {
+          ids: questions.map((q) => q.id),
           answers: latestAnswers.current,
           seconds,
         });

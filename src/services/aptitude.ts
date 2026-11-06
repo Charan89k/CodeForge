@@ -32,6 +32,8 @@ export async function getAptitudeSet(filter: Filter) {
 }
 
 export const submissionSchema = z.object({
+  // The questions the page showed, so a question published mid-set cannot shift the grading.
+  ids: z.array(z.string().max(60)).min(1).max(SET_SIZE),
   answers: z.record(z.string().max(60), z.number().int().min(0).max(8)),
   seconds: z.number().int().min(0).max(MAX_SECONDS).nullable(),
 });
@@ -47,9 +49,8 @@ export async function submitAptitudeSet(
 ): Promise<AptitudeResult | null> {
   if (!APTITUDE_TOPICS.some((topic) => topic.key === filter.topic)) return null;
   const questions = await prisma.aptitudeQuestion.findMany({
-    where: publishedIn(filter),
+    where: { ...publishedIn(filter), id: { in: submission.ids } },
     orderBy: { slug: "asc" },
-    take: SET_SIZE,
     select: { id: true, answer: true, explanation: true },
   });
   if (questions.length === 0) return null;

@@ -125,18 +125,21 @@ describe("grading and performance", () => {
       select: { id: true, answer: true },
     });
 
+  const shownIds = async (topic: string) =>
+    (await getAptitudeSet({ topic, difficulty: null })).map((q) => q.id);
+
   it("refuses an unknown topic and keeps nothing for a visitor", async () => {
     expect(
       await submitAptitudeSet(
         null,
         { topic: "nope", difficulty: null },
-        { answers: {}, seconds: null }
+        { ids: ["x"], answers: {}, seconds: null }
       )
     ).toBeNull();
     const result = await submitAptitudeSet(
       null,
       { topic: "logical", difficulty: null },
-      { answers: {}, seconds: null }
+      { ids: await shownIds("logical"), answers: {}, seconds: null }
     );
     expect(result?.correct).toBe(0);
     await expect(
@@ -150,12 +153,12 @@ describe("grading and performance", () => {
     await submitAptitudeSet(
       learner.id,
       { topic: "logical", difficulty: null },
-      { answers: right, seconds: 42 }
+      { ids: await shownIds("logical"), answers: right, seconds: 42 }
     );
     await submitAptitudeSet(
       learner.id,
       { topic: "quantitative", difficulty: null },
-      { answers: {}, seconds: null }
+      { ids: await shownIds("quantitative"), answers: {}, seconds: null }
     );
 
     const performance = await getAptitudePerformance(learner.id);
@@ -169,5 +172,20 @@ describe("grading and performance", () => {
       where: { userId: learner.id, topic: "logical" },
     });
     expect(timed).toMatchObject({ timed: true, seconds: 42 });
+  });
+
+  it("grades the questions shown, even if one is published mid-set", async () => {
+    const ids = await shownIds(TOPIC);
+    const late = await createAptitudeQuestion(author, input(`Late ${tag}?`));
+    await publishAptitudeQuestion(reviewer, late);
+
+    const result = await submitAptitudeSet(
+      null,
+      { topic: TOPIC, difficulty: null },
+      { ids: [...ids, "not-a-question"], answers: {}, seconds: null }
+    );
+
+    expect(result?.total).toBe(ids.length);
+    expect(result?.review.map((r) => r.id)).not.toContain(late);
   });
 });
