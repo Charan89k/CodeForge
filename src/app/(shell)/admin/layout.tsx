@@ -32,6 +32,7 @@ const TABS = [
   { href: "/admin/content", label: "Content" },
   { href: "/admin/courses", label: "Courses" },
   { href: "/admin/contests", label: "Contests" },
+  { href: "/admin/aptitude", label: "Aptitude" },
   { href: "/admin/ai", label: "AI usage" },
   { href: "/admin/audit", label: "Audit log" },
   { href: "/admin/operations", label: "Operations" },

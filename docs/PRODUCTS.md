@@ -45,6 +45,7 @@ from the database on every request, so changing a URL grants nothing. See
 | Course CMS: authoring, review, publishing, version history | Live | Admin-only. Markdown lessons, or raw blocks for older chapters. An author cannot approve their own version, so publishing needs two admins. Knowledge checks are written with `npm run courses:author`; there is no screen for them, and one cannot be replaced once live |
 | Download your data, delete your account | Live | From `/settings`. Deletion is refused for platform admins, authors, and anyone with college records, pending an approved privacy policy |
 | Original courses | Partial | Programming Foundations, Database Foundations and Core Algorithms: 27 lessons, 27 knowledge checks, every example run by a test. Written and tested; they reach a site only when an operator runs `npm run courses:author` there. More subjects are not written yet |
+| Aptitude practice and authoring | Partial | `/aptitude`, public. 5 topics and 40 original questions. Timed option, weak topics for signed-in learners. Admins author at `/admin/aptitude`; a second admin publishes. Needs `db:seed` after its migration |
 | SQL playground | Live | `/sql`: real PostgreSQL (PGlite) in the browser, loaded from a public CDN. 8 exercises on an invented library. Reset, 10 second limit. Ticks saved in this browser only |
 | SQL problems in the judged catalogue | Planned | |
 | Code playground | Planned | |
@@ -63,7 +64,7 @@ from the database on every request, so changing a URL grants nothing. See
 | Exams: scheduling, frozen versions, autosave, deadlines, grading, release | Live | |
 | Exam overview across classes | Live | |
 | Analytics and audit log | Live | |
-| Aptitude practice | Partial | 24 original questions with explanations |
+| Aptitude practice | Partial | 40 original questions on `/aptitude` and here, shared with Learn. Timed or untimed, per-topic performance. Only 40 questions so far |
 | Mock interviews, text | Needs configuration | Requires an AI provider key |
 | Interview preparation tracks and roadmaps | Live | |
 | Voice interviews and recording | Planned | |

@@ -120,6 +120,12 @@ export const primaryNav: NavGroup[] = [
         icon: Database,
         description: "Real PostgreSQL in your browser, with exercises",
       },
+      {
+        title: "Aptitude",
+        href: "/aptitude",
+        icon: Calculator,
+        description: "Timed or untimed sets, with an explanation for every answer",
+      },
     ],
   },
   {
@@ -332,7 +338,7 @@ function campusNav(viewer: NavViewer): NavGroup[] {
           title: "Aptitude",
           href: "/campus/aptitude",
           icon: Calculator,
-          description: "Quantitative, logical and verbal practice sets",
+          description: "Quantitative, logical, verbal, data and programming sets",
         },
       ],
     },

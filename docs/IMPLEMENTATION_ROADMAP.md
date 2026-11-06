@@ -19,7 +19,7 @@ A slice is done when its backend, interface, persistence, permissions, error sta
 | 1.5 | Visualizer as a laboratory, new modules | None | Queues, hash tables, MST; explanations per step | Three modules done. Layout unchanged |
 | 3.3 | Library: tags, topics, body search, recently viewed | 3.1 | Filters only over real metadata | Body search and recently viewed done. Tags and topics not started |
 | 4.1 | SQL playground, in the browser | None | Isolated by design; resets; exercises tracked | Done, with ticks per browser only |
-| 5.1 | Aptitude in the database, public, timed, analytics | 3.1 | Authoring screen; provenance; weak topics | Planned |
+| 5.1 | Aptitude in the database, public, timed, analytics | 3.1 | Authoring screen; provenance; weak topics | Done. 40 questions, so content still to grow |
 | 5.2 | Contest journey tests, history, ratings | Execution for submissions | Browser journey; honest disabled state until then | Planned |
 | 5.3 | Tutor feedback, deletion, retention, study plans | Provider for live use | Works with a local provider; honest unavailable state | Planned |
 | 5.4 | Community with moderation first | None | Reporting and moderation before posting exists | Planned |

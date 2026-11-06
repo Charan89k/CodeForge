@@ -29,6 +29,7 @@ const ROUTES = [
   "/visualize/breadth-first-search",
   "/visualize/write-pointer",
   "/sql",
+  "/aptitude",
 ];
 
 /** Errors a healthy page may still emit, and why they are not our problem. */

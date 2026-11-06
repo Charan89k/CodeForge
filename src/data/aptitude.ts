@@ -1,6 +1,9 @@
+import type { Difficulty } from "@/generated/prisma/enums";
+
 /**
- * Aptitude practice sets. Written for Tech Epitome. Server-side only: the page
- * passes questions to the browser without answers, and the action grades.
+ * Aptitude topics, and the questions the seed loads into the database. Written
+ * for Tech Epitome. Pages read questions through `services/aptitude`, which
+ * sends them to the browser without answers.
  */
 export type AptitudeQuestion = {
   id: string;
@@ -9,6 +12,7 @@ export type AptitudeQuestion = {
   /** Index into `options`. */
   answer: number;
   explanation: string;
+  difficulty?: Difficulty;
 };
 
 export type AptitudeTopic = {
@@ -230,6 +234,151 @@ export const APTITUDE_TOPICS: readonly AptitudeTopic[] = [
       },
     ],
   },
+  {
+    key: "data-interpretation",
+    title: "Data interpretation",
+    description: "Read figures from a small table or statement, then work with them.",
+    questions: [
+      {
+        id: "di1",
+        prompt:
+          "Sales were 40, 50 and 60 units over three months. What is the monthly average?",
+        options: ["45", "50", "55", "60"],
+        answer: 1,
+        explanation: "(40 + 50 + 60) / 3 = 150 / 3 = 50.",
+        difficulty: "EASY",
+      },
+      {
+        id: "di2",
+        prompt: "Revenue grew from 200 to 250. What is the percentage growth?",
+        options: ["20%", "25%", "30%", "50%"],
+        answer: 1,
+        explanation: "(250 - 200) / 200 = 0.25, which is 25%.",
+        difficulty: "EASY",
+      },
+      {
+        id: "di3",
+        prompt: "Of 80 students, 35% chose Python. How many chose Python?",
+        options: ["24", "26", "28", "32"],
+        answer: 2,
+        explanation: "0.35 × 80 = 28.",
+        difficulty: "EASY",
+      },
+      {
+        id: "di4",
+        prompt:
+          "A team closed 12, 18 and 30 tickets. What share of the total was the last figure?",
+        options: ["30%", "40%", "50%", "60%"],
+        answer: 2,
+        explanation: "The total is 60, and 30 / 60 = 50%.",
+      },
+      {
+        id: "di5",
+        prompt:
+          "Costs are 60 and revenue is 75. What is the profit as a percentage of cost?",
+        options: ["15%", "20%", "25%", "30%"],
+        answer: 2,
+        explanation: "Profit is 15, and 15 / 60 = 25%.",
+      },
+      {
+        id: "di6",
+        prompt:
+          "Boys and girls are in the ratio 3:2 in a class of 40. How many girls are there?",
+        options: ["12", "16", "20", "24"],
+        answer: 1,
+        explanation: "Girls are 2 of 5 parts, and 40 × 2 / 5 = 16.",
+      },
+      {
+        id: "di7",
+        prompt:
+          "A value rises 10% each year for two years from 100. What is it after two years?",
+        options: ["110", "120", "121", "122"],
+        answer: 2,
+        explanation: "100 × 1.1 × 1.1 = 121, because the second rise applies to 110.",
+        difficulty: "HARD",
+      },
+      {
+        id: "di8",
+        prompt: "Scores of 70, 80 and x average 80. What is x?",
+        options: ["80", "85", "90", "95"],
+        answer: 2,
+        explanation: "The total must be 240, so x = 240 - 150 = 90.",
+        difficulty: "HARD",
+      },
+    ],
+  },
+  {
+    key: "programming",
+    title: "Programming aptitude",
+    description: "Trace short logic, count steps and reason about how code behaves.",
+    questions: [
+      {
+        id: "pr1",
+        prompt: "After x = 5, then x = x * 2, then x = x + 1, what is x?",
+        options: ["10", "11", "12", "16"],
+        answer: 1,
+        explanation: "5 × 2 = 10, then 10 + 1 = 11.",
+        difficulty: "EASY",
+      },
+      {
+        id: "pr2",
+        prompt: "What is 17 % 5, the remainder when 17 is divided by 5?",
+        options: ["1", "2", "3", "5"],
+        answer: 1,
+        explanation: "15 is the largest multiple of 5 below 17, leaving 2.",
+        difficulty: "EASY",
+      },
+      {
+        id: "pr3",
+        prompt:
+          "A loop runs for i = 1, 2, ... 10 and adds i to a total starting at 0. What is the total?",
+        options: ["45", "50", "55", "100"],
+        answer: 2,
+        explanation: "1 + 2 + ... + 10 = 10 × 11 / 2 = 55.",
+        difficulty: "EASY",
+      },
+      {
+        id: "pr4",
+        prompt:
+          "A loop starts with i = 1 and doubles i each pass, running only while i is below 64. How many passes run?",
+        options: ["5", "6", "7", "64"],
+        answer: 1,
+        explanation: "1, 2, 4, 8, 16 and 32 are below 64, so it runs 6 times.",
+      },
+      {
+        id: "pr5",
+        prompt: "What is the binary number 1011 in decimal?",
+        options: ["9", "10", "11", "13"],
+        answer: 2,
+        explanation: "8 + 0 + 2 + 1 = 11.",
+      },
+      {
+        id: "pr6",
+        prompt: "A stack receives push 1, push 2, pop, push 3. What is on top?",
+        options: ["1", "2", "3", "Nothing"],
+        answer: 2,
+        explanation: "The pop removes 2, then 3 goes on top of 1.",
+      },
+      {
+        id: "pr7",
+        prompt: "What does (true AND false) OR (NOT false) evaluate to?",
+        options: ["true", "false", "An error", "It depends"],
+        answer: 0,
+        explanation:
+          "true AND false is false, NOT false is true, and false OR true is true.",
+      },
+      {
+        id: "pr8",
+        prompt:
+          "Binary search on 1,024 sorted items needs at most how many comparisons to narrow to one item?",
+        options: ["10", "32", "512", "1,024"],
+        answer: 0,
+        explanation:
+          "Each comparison halves the range, and 2 to the power 10 is 1,024.",
+        difficulty: "HARD",
+      },
+    ],
+  },
 ];
 
 export function aptitudeTopic(key: string): AptitudeTopic | null {
@@ -244,10 +393,10 @@ export type AptitudeResult = {
 
 /** Unanswered questions count as wrong, and unknown ids are ignored. */
 export function gradeAptitude(
-  topic: AptitudeTopic,
+  questions: readonly Pick<AptitudeQuestion, "id" | "answer" | "explanation">[],
   answers: Readonly<Record<string, number>>
 ): AptitudeResult {
-  const review = topic.questions.map((q) => {
+  const review = questions.map((q) => {
     const chosen = answers[q.id];
     return {
       id: q.id,
@@ -258,7 +407,7 @@ export function gradeAptitude(
   });
   return {
     correct: review.filter((r) => r.chosen === r.answer).length,
-    total: topic.questions.length,
+    total: questions.length,
     review,
   };
 }

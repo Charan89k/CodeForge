@@ -4,7 +4,7 @@ The durable log for the build mission. A new session reads this first, then cont
 
 ## Current position
 
-- **Branch:** `feat/sql-playground`, stacked on `feat/library-metadata` (PR #9). Each later slice stacks on the last until the PRs are merged.
+- **Branch:** `feat/aptitude`, stacked on `feat/sql-playground` (PR #10). Each later slice stacks on the last until the PRs are merged.
 - **Phase:** 1 (shell and design).
 - **Next exact task:** see the bottom of this file.
 
@@ -70,6 +70,8 @@ Merging PRs #3, #4, #5. Any deployment or production change. Publishing courses.
 
 **Dark pane fix.** `.dark` under a light page inherited light tokens, so the workspace pane from `f0b3329` was dark only in Monaco. `.dark` now declares the dark tokens, with a regression check.
 
+**Aptitude.** `feat/aptitude`: questions move to `aptitude_questions`, `/aptitude` is public, with an optional timer, per-topic performance and `/admin/aptitude` for authoring with a second admin. **Release note: the migration must be followed by `db:seed:prod`, or `/campus/aptitude` shows no questions.** The original 24 questions default to Medium; nobody has graded them.
+
 ## Next exact task
 
-Aptitude in the database, public, timed, with analytics (roadmap 5.1). Course tags and topics (rest of 3.3) need a migration and a CMS field, so do them alongside it.
+Contest journey tests, history and ratings (roadmap 5.2), with an honest disabled state until execution exists. Course tags and topics (rest of 3.3) still need a migration and a CMS field.

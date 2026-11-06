@@ -346,12 +346,42 @@ model AptitudeAttempt {
   topic     String
   correct   Int
   total     Int
+  timed     Boolean  @default(false)
+  /// Reported by the browser, so it is a practice figure and never a grade.
+  seconds   Int?
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@map("aptitude_attempts")
+}
+
+/// An aptitude question. Public once PUBLISHED; the answer never reaches a
+/// browser until the set is submitted.
+model AptitudeQuestion {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  topic        String
+  difficulty   Difficulty    @default(MEDIUM)
+  prompt       String        @db.Text
+  options      String[]
+  /// Index into `options`.
+  answer       Int
+  explanation  String        @db.Text
+  status       ContentStatus @default(DRAFT)
+  /// Provenance: "Original", or where a licensed question came from.
+  source       String        @default("Original")
+  authorId     String?
+  reviewedById String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  author     User? @relation("AptitudeAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  reviewedBy User? @relation("AptitudeReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([topic, status])
+  @@map("aptitude_questions")
 }
 
 enum SubmissionStatus {
@@ -558,6 +588,8 @@ model User {
   revisionsAuthored     ChapterRevision[]        @relation("RevisionAuthor")
   revisionsReviewed     ChapterRevision[]        @relation("RevisionReviewer")
   aptitudeAttempts      AptitudeAttempt[]
+  aptitudeAuthored      AptitudeQuestion[]       @relation("AptitudeAuthor")
+  aptitudeReviewed      AptitudeQuestion[]       @relation("AptitudeReviewer")
   quizAttempts          QuizAttempt[]
   bookmarks             Bookmark[]
   notes                 Note[]
