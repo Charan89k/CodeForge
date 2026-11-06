@@ -68,9 +68,6 @@ export default defineConfig({
   // a sandbox. Under three workers competing for the same dev server, a
   // slow-but-correct run was failing on the clock rather than on a bug.
   timeout: 60_000,
-  // The dev server compiles each route on its first visit, which under a full
-  // run can outlast the default 5 s. This changes patience, not what is asserted.
-  expect: { timeout: 15_000 },
 
   use: {
     baseURL,

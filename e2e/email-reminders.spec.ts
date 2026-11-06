@@ -56,12 +56,15 @@ async function callCron(
 ): Promise<{ status: number; body: string }> {
   // The job allows one run at a time, so a parallel worker's run answers 409.
   // That is the lock working; wait for it to finish rather than failing.
-  for (let attempt = 0; ; attempt += 1) {
+  // A run visits every learner with due reviews, and the shared test database
+  // keeps every earlier run's learners, so one run measured 5 to 13 s here.
+  const deadline = Date.now() + 60_000;
+  for (;;) {
     const response = await page.request.post("/api/cron/notifications", {
       headers,
       failOnStatusCode: false,
     });
-    if (response.status() !== 409 || attempt === 20) {
+    if (response.status() !== 409 || Date.now() > deadline) {
       return { status: response.status(), body: await response.text() };
     }
     await page.waitForTimeout(500);
