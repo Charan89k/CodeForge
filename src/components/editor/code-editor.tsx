@@ -23,6 +23,7 @@ export function CodeEditor({
   onChange,
   readOnly = false,
   highlight = null,
+  theme,
 }: {
   language: Language;
   value: string;
@@ -34,6 +35,8 @@ export function CodeEditor({
    * view only when it is off screen, so stepping does not yank the editor.
    */
   highlight?: { line: number; kind: "step" | "error" } | null;
+  /** Overrides the site theme. */
+  theme?: "light" | "dark";
 }) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const decorationsRef = useRef<ReturnType<
@@ -73,7 +76,7 @@ export function CodeEditor({
 
   const { resolvedTheme } = useTheme();
   const editorTheme =
-    resolvedTheme === "light" ? "tech-epitome-light" : "tech-epitome-dark";
+    (theme ?? resolvedTheme) === "light" ? "tech-epitome-light" : "tech-epitome-dark";
 
   // Both themes match --card so the editor sits flush with its panel; the
   // `theme` prop switches between them when the site theme changes.

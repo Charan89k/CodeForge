@@ -1,8 +1,24 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+} from "react";
 import dynamic from "next/dynamic";
-import { Activity, FileText, Loader2, Play, RotateCcw, Send } from "lucide-react";
+import {
+  Activity,
+  FileText,
+  Loader2,
+  Maximize2,
+  Minimize2,
+  Play,
+  RotateCcw,
+  Send,
+} from "lucide-react";
+import { useTheme } from "next-themes";
 // react-resizable-panels v4 renamed PanelGroup -> Group and
 // PanelResizeHandle -> Separator, and `direction` -> `orientation`.
 import { Group, Panel, Separator } from "react-resizable-panels";
@@ -40,7 +56,11 @@ import {
 } from "@/lib/code-execution/signature";
 import { isTraceable } from "@/lib/trace/types";
 import { cn } from "@/lib/utils";
-import type { TutorContextLabel, TutorQuickAction, TutorCodeState } from "@/lib/tutor/types";
+import type {
+  TutorContextLabel,
+  TutorQuickAction,
+  TutorCodeState,
+} from "@/lib/tutor/types";
 import type { SubmitOutcome, RunOutcome } from "@/services/submissions";
 
 /**
@@ -95,6 +115,8 @@ type Props = {
   likelyMobile?: boolean;
 };
 
+const subscribeToNothing = () => () => {};
+
 function draftKey(slug: string, language: Language) {
   return `tech-epitome:draft:${slug}:${language}`;
 }
@@ -148,10 +170,23 @@ export function ProblemWorkspace({
   const [language, setLanguage] = useState<Language>(initialLanguage);
   const [code, setCode] = useState(() => loadDraft(slug, initialLanguage, starterCode));
   const [loadedFor, setLoadedFor] = useState(initialLanguage);
-  const [outcome, setOutcome] = useState<(RunOutcome & Partial<SubmitOutcome>) | null>(null);
+  const [outcome, setOutcome] = useState<(RunOutcome & Partial<SubmitOutcome>) | null>(
+    null
+  );
   const [mode, setMode] = useState<"run" | "submit" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [focused, setFocused] = useState(false);
+
+  // Dark unless the person chose light themselves. A light operating system
+  // setting is not that choice. The server cannot know, so it renders dark.
+  const { theme } = useTheme();
+  const hydrated = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false
+  );
+  const editorTheme = hydrated && theme === "light" ? "light" : "dark";
 
   // Custom input: one test case the learner writes, in the same format as
   // the samples, run through the problem's own harness. Seeded with the
@@ -164,7 +199,10 @@ export function ProblemWorkspace({
   // Live visualizer wiring: a token to request an auto-playing trace, the
   // line it is on (mirrored into the editor), and which pane is showing.
   const [runToken, setRunToken] = useState(0);
-  const [highlight, setHighlight] = useState<{ line: number; kind: "step" | "error" } | null>(null);
+  const [highlight, setHighlight] = useState<{
+    line: number;
+    kind: "step" | "error";
+  } | null>(null);
   const [leftPane, setLeftPane] = useState<"description" | "visualize">("description");
   const [mobilePane, setMobilePane] = useState("problem");
   const traceable = isTraceable(language);
@@ -284,8 +322,38 @@ export function ProblemWorkspace({
     />
   );
 
+  const canRun = !pending && execution.available;
+  const canSubmit = canRun && signedIn;
+
+  // Capture phase, because Monaco claims Ctrl+Enter for itself. No dependency
+  // list: `execute` closes over the current code, so it must never go stale.
+  useEffect(() => {
+    function onShortcut(event: KeyboardEvent) {
+      if (event.key !== "Enter" || !(event.ctrlKey || event.metaKey)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.shiftKey) {
+        if (canSubmit) execute("submit");
+      } else if (canRun) {
+        execute("run");
+      }
+    }
+    window.addEventListener("keydown", onShortcut, true);
+    return () => window.removeEventListener("keydown", onShortcut, true);
+  });
+
+  // Bubble phase, so Escape closes Monaco's suggestions before it leaves focus.
+  useEffect(() => {
+    if (!focused) return;
+    function onEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setFocused(false);
+    }
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [focused]);
+
   const controls = (
-    <div className="border-border flex flex-wrap items-center gap-2 border-b px-3 py-2">
+    <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
       <Select
         value={language}
         onValueChange={(value) => setLanguage(value as Language)}
@@ -321,11 +389,28 @@ export function ProblemWorkspace({
             of the two is ever mounted, because only one layout is. */}
         {!isMobile && tutorLauncher}
 
+        {!isMobile && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8"
+            onClick={() => setFocused((on) => !on)}
+            aria-pressed={focused}
+          >
+            {focused ? (
+              <Minimize2 className="size-3.5" />
+            ) : (
+              <Maximize2 className="size-3.5" />
+            )}
+            Focus mode
+          </Button>
+        )}
+
         {signature && (
           <Button
             variant="ghost"
             size="sm"
-            className="text-brand-300 hover:text-brand-200 h-8"
+            className="h-8 text-brand-300 hover:text-brand-200"
             onClick={visualize}
             disabled={!traceable}
             title={
@@ -344,7 +429,8 @@ export function ProblemWorkspace({
           size="sm"
           className="h-8"
           onClick={() => execute("run")}
-          disabled={pending || !execution.available}
+          disabled={!canRun}
+          aria-keyshortcuts="Control+Enter Meta+Enter"
         >
           {pending && mode === "run" ? (
             <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
@@ -358,7 +444,8 @@ export function ProblemWorkspace({
           size="sm"
           className="h-8"
           onClick={() => execute("submit")}
-          disabled={pending || !signedIn || !execution.available}
+          disabled={!canSubmit}
+          aria-keyshortcuts="Control+Shift+Enter Meta+Shift+Enter"
           title={
             !execution.available
               ? execution.reason
@@ -379,17 +466,25 @@ export function ProblemWorkspace({
   );
 
   const editorPane = (
-    <div className="flex h-full flex-col">
+    <div
+      className={cn(
+        "flex h-full flex-col bg-background text-foreground",
+        editorTheme === "dark" && "dark"
+      )}
+    >
       {controls}
       {!execution.available ? (
-        <p role="status" className="border-border bg-muted/40 text-muted-foreground border-b px-3 py-2 text-xs">
+        <p
+          role="status"
+          className="border-b border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground"
+        >
           {execution.reason} You can still read the problem, write code, use hints and
           the visualizer.
         </p>
       ) : (
-        <p className="border-border text-muted-foreground border-b px-3 py-1.5 text-xs tabular-nums">
-          Limits per test: {execution.timeLimitSeconds} s CPU, {execution.memoryLimitMb} MB
-          memory, 1 MB output. No network access.
+        <p className="border-b border-border px-3 py-1.5 text-xs text-muted-foreground tabular-nums">
+          Limits per test: {execution.timeLimitSeconds} s CPU, {execution.memoryLimitMb}{" "}
+          MB memory, 1 MB output. No network access.
         </p>
       )}
       <div className="min-h-0 flex-1">
@@ -398,22 +493,24 @@ export function ProblemWorkspace({
           value={code}
           onChange={persist}
           highlight={highlight}
+          theme={editorTheme}
         />
       </div>
-      <p className="border-border text-muted-foreground/70 border-t px-3 py-1.5 text-[0.65rem]">
+      <p className="border-t border-border px-3 py-1.5 text-[0.65rem] text-muted-foreground/70">
         Tab moves focus out of the editor. Press Ctrl+M to let Tab indent instead.
+        Ctrl+Enter runs. Ctrl+Shift+Enter submits.
       </p>
     </div>
   );
 
   const resultsPane = (
     <section aria-labelledby="test-results-heading" className="flex h-full flex-col">
-      <div className="border-border flex flex-wrap items-center gap-2 border-b px-3 py-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
         <h2 id="test-results-heading" className="text-xs font-medium">
           Test results
         </h2>
         {!signedIn && (
-          <span className="text-muted-foreground text-[0.68rem]">
+          <span className="text-[0.68rem] text-muted-foreground">
             Sign in to submit and record progress
           </span>
         )}
@@ -425,14 +522,17 @@ export function ProblemWorkspace({
               onCheckedChange={setUseCustom}
               disabled={pending}
             />
-            <Label htmlFor={`custom-input-${slug}`} className="text-[0.7rem] font-normal">
+            <Label
+              htmlFor={`custom-input-${slug}`}
+              className="text-[0.7rem] font-normal"
+            >
               Run with custom input
             </Label>
           </div>
         )}
       </div>
       {runsCustom && signature && (
-        <div className="border-border space-y-2 border-b px-3 py-2.5">
+        <div className="space-y-2 border-b border-border px-3 py-2.5">
           <Textarea
             value={customInput}
             onChange={(event) => setCustomInput(event.target.value)}
@@ -442,7 +542,7 @@ export function ProblemWorkspace({
             aria-label="Custom input"
             className="font-mono text-[0.72rem]"
           />
-          <ul className="text-muted-foreground space-y-0.5 text-[0.65rem] leading-relaxed">
+          <ul className="space-y-0.5 text-[0.65rem] leading-relaxed text-muted-foreground">
             {describeWireFormat(signature).map((line) => (
               <li key={line}>{line}</li>
             ))}
@@ -479,16 +579,14 @@ export function ProblemWorkspace({
       onLine={onTraceLine}
     />
   ) : (
-    <p className="text-muted-foreground p-6 text-sm">
-      This problem has no visual yet.
-    </p>
+    <p className="p-6 text-sm text-muted-foreground">This problem has no visual yet.</p>
   );
 
   if (isMobile) {
     // Stacked tabs: a three-way split at 390px is unusable.
     return (
       <Tabs value={mobilePane} onValueChange={setMobilePane}>
-        <div className="border-border flex items-center justify-end border-b px-2 py-1.5">
+        <div className="flex items-center justify-end border-b border-border px-2 py-1.5">
           {tutorLauncher}
         </div>
 
@@ -527,7 +625,13 @@ export function ProblemWorkspace({
   }
 
   return (
-    <div className="h-[calc(100dvh-3.5rem)]">
+    <div
+      data-testid="problem-workspace"
+      className={cn(
+        "h-[calc(100dvh-3.5rem)]",
+        focused && "fixed inset-0 z-50 h-dvh bg-background"
+      )}
+    >
       <Group orientation="horizontal" id="tech-epitome-problem-h" className="h-full">
         <Panel defaultSize="42%" minSize="25%">
           <Tabs
@@ -535,10 +639,15 @@ export function ProblemWorkspace({
             onValueChange={(value) => setLeftPane(value as typeof leftPane)}
             className="flex h-full flex-col gap-0"
           >
-            <div className="border-border bg-card/40 flex items-center border-b px-2">
+            <div className="flex items-center border-b border-border bg-card/40 px-2">
               <TabsList className="h-10 bg-transparent p-0">
                 <PaneTab value="description" icon={FileText} label="Description" />
-                <PaneTab value="visualize" icon={Activity} label="Visualizer" live={traceable} />
+                <PaneTab
+                  value="visualize"
+                  icon={Activity}
+                  label="Visualizer"
+                  live={traceable}
+                />
               </TabsList>
             </div>
             {/* forceMount keeps both mounted: the description holds draft
@@ -578,16 +687,14 @@ export function ProblemWorkspace({
   );
 }
 
-function ResizeHandle({
-  orientation,
-}: {
-  orientation: "horizontal" | "vertical";
-}) {
+function ResizeHandle({ orientation }: { orientation: "horizontal" | "vertical" }) {
   return (
     <Separator
       className={cn(
-        "bg-border hover:bg-brand-500/40 data-[state=dragging]:bg-brand-500/60 transition-colors",
-        orientation === "horizontal" ? "w-px cursor-col-resize" : "h-px cursor-row-resize"
+        "bg-border transition-colors hover:bg-brand-500/40 data-[state=dragging]:bg-brand-500/60",
+        orientation === "horizontal"
+          ? "w-px cursor-col-resize"
+          : "h-px cursor-row-resize"
       )}
       aria-label={`Resize ${orientation === "horizontal" ? "panels" : "editor"}`}
     />
@@ -608,11 +715,13 @@ function PaneTab({
   return (
     <TabsTrigger
       value={value}
-      className="data-[state=active]:text-foreground data-[state=active]:after:bg-brand-500 relative h-10 rounded-none border-0 bg-transparent px-3 text-xs shadow-none after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+      className="relative h-10 rounded-none border-0 bg-transparent px-3 text-xs shadow-none after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:after:bg-brand-500"
     >
       <Icon className="size-3.5" />
       {label}
-      {live && <span className="bg-brand-500 size-1.5 rounded-full" aria-hidden="true" />}
+      {live && (
+        <span className="size-1.5 rounded-full bg-brand-500" aria-hidden="true" />
+      )}
     </TabsTrigger>
   );
 }

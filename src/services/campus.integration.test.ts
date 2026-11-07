@@ -40,6 +40,7 @@ import {
   listClasses,
   removeClassMember,
 } from "./campus-classes";
+import { getTeachingQueue } from "./campus-overview";
 import { createInstitution } from "./institutions-platform";
 
 /**
@@ -526,6 +527,17 @@ describe("assessment lifecycle", () => {
         tx.assessmentAttempt.update({ where: { id: attemptS1 }, data: { score: 10 } })
       )
     ).rejects.toThrow(/not allowed/);
+  });
+
+  it("queues an exam for marking only for those who teach it", async () => {
+    const queued = async (key: string, slug?: string) =>
+      (await getTeachingQueue(await ctx(key, slug))).find((e) => e.id === examId);
+
+    expect((await queued("facultyA"))?.toGrade).toBeGreaterThan(0);
+    expect((await queued("adminA"))?.toGrade).toBeGreaterThan(0);
+    expect(await queued("faculty2A")).toBeUndefined();
+    expect(await queued("facultyB", instB.slug)).toBeUndefined();
+    await rejects(getTeachingQueue(await ctx("s1")), "forbidden");
   });
 
   it("grades by instructors only, with an audit trail", async () => {

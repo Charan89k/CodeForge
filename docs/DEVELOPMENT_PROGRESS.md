@@ -50,6 +50,16 @@ Merging PRs #3, #4, #5. Any deployment or production change. Publishing courses.
 
 **Known, not fixed:** `authored-courses.spec` failed once earlier, with cause unknown. It has passed every run since. The full browser suite and production build have not been re-run at `54ca938`.
 
+**`f590dd9` feat(campus).** The college page opens on each role's own work: exams and drives for students, exams to mark for faculty, drives and outcomes for officers, members and audit for admins. `getTeachingQueue` is tested across teachers, tenants and students.
+
+**`f0b3329` feat(workspace).** Ctrl+Enter runs, Ctrl+Shift+Enter submits, focus mode covers the site chrome, and the editor pane is dark unless the person chose light. Problems only.
+
+**Full gate at `f0b3329`, no retries.** Playwright 343 passed, 25 skipped, 0 failed. Vitest 1,923 passed, 35 skipped. Lint 0 errors. Build completed.
+
+**Seen once, not reproduced:** the Next dev overlay showed "1 Issue" on one mobile admin screenshot. A clean load of that page logged no console errors. Cause unknown.
+
+**Vercel preview** fails on PRs #3, #4, #5 and #6. Part of the open Vercel decision; not investigated further.
+
 ## Next exact task
 
-Campus shell (roadmap 1.3): role navigation and dashboards, with distinct student, faculty, officer and admin views. Then the coding workspace (1.4).
+Visualizer as a laboratory (roadmap 1.5): queues, hash tables and minimum spanning tree, with an explanation per step. Then library metadata (3.3), then the SQL playground (4.1).

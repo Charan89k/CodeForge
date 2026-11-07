@@ -14,8 +14,8 @@ A slice is done when its backend, interface, persistence, permissions, error sta
 | 3.1 | CMS review separation | None | An author cannot approve their own revision. Permission tests. A dedicated reviewer role is still to come | Done |
 | 3.2 | DSA chapters: trees, heaps, graphs, sorting, greedy, dynamic programming | 3.1 preferred | Original, examples run in tests, knowledge checks, practice links | Done |
 | 1.2 | Learn dashboard and information architecture | 1.1 | Real data only; daily, contests, activity calendar; responsive | Dashboard done. Navigation unchanged |
-| 1.3 | Campus shell: role navigation and dashboards | None | Distinct student, faculty, officer and admin views; dense tables | Planned |
-| 1.4 | Coding workspace dark by default, shortcuts, full-screen | None | Keyboard accessible; editor space preserved | Planned |
+| 1.3 | Campus shell: role navigation and dashboards | None | Distinct student, faculty, officer and admin views; dense tables | College page done. Campus navigation and home unchanged |
+| 1.4 | Coding workspace dark by default, shortcuts, full-screen | None | Keyboard accessible; editor space preserved | Done on problems. LLD and system design workspaces unchanged |
 | 1.5 | Visualizer as a laboratory, new modules | None | Queues, hash tables, MST; explanations per step | Planned |
 | 3.3 | Library: tags, topics, body search, recently viewed | 3.1 | Filters only over real metadata | Planned |
 | 4.1 | SQL playground, in the browser | None | Isolated by design; resets; exercises tracked | Planned |

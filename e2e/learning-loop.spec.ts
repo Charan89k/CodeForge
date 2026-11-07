@@ -221,6 +221,45 @@ test("typing in the editor drives the submitted code", async ({ page }) => {
   await expect(page.getByText("12345").first()).toBeVisible();
 });
 
+test("the workspace runs by shortcut, focuses, and is dark unless light was chosen", async ({
+  page,
+}, testInfo) => {
+  test.slow();
+  test.skip(testInfo.project.name === "mobile", "Desktop layout only");
+
+  await page.goto("/problems/running-altitude");
+  const editor = page.locator(".monaco-editor").first();
+  await expect(editor).toBeVisible({ timeout: 60_000 });
+  await expect(editor).toHaveClass(/vs-dark/);
+
+  await page.locator(".monaco-editor .view-lines").first().click();
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.insertText("def highestAltitude(changes): return 12345");
+  await page.keyboard.press("Control+Enter");
+  await expect(page.getByText("Wrong answer").first()).toBeVisible({
+    timeout: 180_000,
+  });
+  // Monaco's own Ctrl+Enter would have added a line.
+  await expect(page.locator(".monaco-editor .view-line")).toHaveCount(1);
+
+  const covers = () =>
+    page.evaluate(() =>
+      Boolean(
+        document.elementFromPoint(20, 20)?.closest('[data-testid="problem-workspace"]')
+      )
+    );
+  expect(await covers()).toBe(false);
+  await page.getByRole("button", { name: "Focus mode" }).click();
+  await expect.poll(covers).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect.poll(covers).toBe(false);
+
+  await page.evaluate(() => window.localStorage.setItem("theme", "light"));
+  await page.reload();
+  await expect(editor).toBeVisible({ timeout: 60_000 });
+  await expect(editor).not.toHaveClass(/vs-dark/);
+});
+
 test("hidden test inputs are never exposed in the results panel", async ({ page }) => {
   test.slow();
   await signUp(page, "hidden");

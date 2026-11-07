@@ -12,6 +12,7 @@ import {
 
 import { CampusNotice } from "@/components/campus/notice";
 import { CampusTrail } from "@/components/campus/campus-trail";
+import { RoleFocus } from "@/components/campus/role-focus";
 import { PageHeader } from "@/components/common/page-header";
 import { SectionHeading } from "@/components/common/section-heading";
 import { Badge } from "@/components/ui/badge";
@@ -150,8 +151,9 @@ export default async function InstitutionPage({
       <div className="mt-6">
         <CampusNotice code={msg} />
       </div>
+      <RoleFocus ctx={ctx} members={members} />
 
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <section aria-labelledby="classes-heading" className="min-w-0">
           <SectionHeading
             id="classes-heading"
@@ -163,7 +165,9 @@ export default async function InstitutionPage({
             <p className="py-6 text-sm text-muted-foreground">
               {can(ctx, "classes.create")
                 ? "No classes yet. Create one to assign content and run assessments."
-                : "You are not in any class here yet. Your instructor adds you."}
+                : ctx.role === "PLACEMENT_OFFICER"
+                  ? "Placement officers are not added to classes."
+                  : "You are not in any class here yet. Your instructor adds you."}
             </p>
           ) : (
             <ul className="divide-y divide-border">
@@ -319,7 +323,12 @@ export default async function InstitutionPage({
                 action={leaveAction.bind(null, ctx.institution.slug)}
                 className="mt-3"
               >
-                <Button type="submit" variant="destructive" size="sm">
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  size="sm"
+                  className="h-auto text-left whitespace-normal"
+                >
                   Leave {ctx.institution.name}
                 </Button>
               </form>

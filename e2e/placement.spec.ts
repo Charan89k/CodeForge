@@ -41,6 +41,25 @@ async function person(
   return { page, email };
 }
 
+test("each role opens the college page on its own work", async ({ browser }) => {
+  test.slow();
+  const college = await createCollege(unique());
+  const expected = [
+    ["STUDENT", "Your next steps", "Your teaching"],
+    ["FACULTY", "Your teaching", "Placement office"],
+    ["PLACEMENT_OFFICER", "Placement office", "Your teaching"],
+    ["INSTITUTION_ADMIN", "Your college", "Your next steps"],
+  ] as const;
+
+  for (const [role, heading, absent] of expected) {
+    const { page } = await person(browser, college.id, role, role.toLowerCase());
+    await page.goto(`/campus/${college.slug}`);
+    const main = page.getByRole("main");
+    await expect(main.getByRole("heading", { name: heading })).toBeVisible();
+    await expect(main.getByRole("heading", { name: absent })).toHaveCount(0);
+  }
+});
+
 test("a drive runs from recruiter to accepted offer, and eligibility is explained", async ({
   browser,
 }) => {
