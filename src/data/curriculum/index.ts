@@ -32,6 +32,7 @@ export const DSA_COURSE: CourseSeed = {
   description:
     "The groundwork for everything else: how to reason about cost, the data structures worth knowing cold, and the handful of techniques that turn a quadratic idea into a linear one. Every chapter ends with the question an interviewer is really asking — what shape is this problem?",
   icon: "GraduationCap",
+  category: "Data Structures & Algorithms",
   estimatedHours: 14,
   sections: [
     COMPLEXITY_SECTION,

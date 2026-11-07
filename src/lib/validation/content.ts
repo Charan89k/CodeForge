@@ -33,8 +33,9 @@ const complexityRowSchema = z.object({
   note: z.string().optional(),
 });
 
-export const contentBlockSchema: z.ZodType<ContentBlock> =
-  z.discriminatedUnion("type", [
+export const contentBlockSchema: z.ZodType<ContentBlock> = z.discriminatedUnion(
+  "type",
+  [
     z.object({
       type: z.literal("heading"),
       level: z.union([z.literal(2), z.literal(3)]),
@@ -151,7 +152,8 @@ export const contentBlockSchema: z.ZodType<ContentBlock> =
       explanation: z.string().min(1),
     }),
     z.object({ type: z.literal("divider") }),
-  ]) as unknown as z.ZodType<ContentBlock>;
+  ]
+) as unknown as z.ZodType<ContentBlock>;
 
 export const contentDocumentSchema = z.array(contentBlockSchema);
 

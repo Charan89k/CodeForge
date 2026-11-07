@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { closeDb, makeAdmin } from "./db";
+import { closeDb, execSql, joinTestCollege, makeAdmin, userIdFor } from "./db";
 import { signUp } from "./helpers";
 
 /**
@@ -19,6 +19,25 @@ test("a learner cannot reach the course editor", async ({ page }) => {
   await page.goto("/admin/courses");
   await expect(page.getByText("You do not have access to this")).toBeVisible();
   await expect(page.getByRole("button", { name: "Create course" })).toHaveCount(0);
+});
+
+test("no college role reaches the course editor", async ({ page }) => {
+  const email = `e2e-cms-college-${unique()}@techepitome.test`;
+  await signUp(page, email);
+  await joinTestCollege(email);
+  const userId = await userIdFor(email);
+  // Student first, as joined; the rest are the same account promoted in place.
+  for (const role of ["STUDENT", "FACULTY", "PLACEMENT_OFFICER", "INSTITUTION_ADMIN"]) {
+    await execSql(`UPDATE institution_memberships SET role = $1 WHERE "userId" = $2`, [
+      role,
+      userId,
+    ]);
+    await page.goto("/admin/courses");
+    await expect(page.getByText("You do not have access to this"), role).toBeVisible();
+    await expect(page.getByRole("button", { name: "Create course" }), role).toHaveCount(
+      0
+    );
+  }
 });
 
 test("an admin authors a course and a learner reads it only once published", async ({

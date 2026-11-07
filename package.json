@@ -24,6 +24,7 @@
     "db:status": "prisma migrate status",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "courses:author": "tsx --conditions=react-server scripts/author-courses.ts",
     "content:sync": "tsx scripts/chapter-content-sync.ts",
     "content:sync:dry": "tsx scripts/chapter-content-sync.ts --dry-run",
     "content:sync:prod": "NODE_ENV=production tsx scripts/chapter-content-sync.ts",

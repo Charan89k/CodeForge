@@ -527,7 +527,14 @@ export async function publishRevision(
         readingMinutes: revision.readingMinutes,
         difficulty: revision.difficulty,
         status: "PUBLISHED",
+        // The library's "recently updated" means the course's reading changed.
+        section: { update: { course: { update: { updatedAt: new Date() } } } },
       },
+    });
+    // A chapter's knowledge check goes live with it, never ahead of it.
+    await tx.quiz.updateMany({
+      where: { chapterId: revision.chapterId, status: "DRAFT" },
+      data: { status: "PUBLISHED" },
     });
     await audit(
       tx,
@@ -537,6 +544,107 @@ export async function publishRevision(
       revision.chapterId,
       `Published v${revision.number}`
     );
+  });
+}
+
+export const chapterQuizSchema = z
+  .object({
+    slug: slugSchema,
+    title: z.string().trim().min(2).max(160),
+    passScore: z.number().int().min(1).max(100).default(70),
+    questions: z
+      .array(
+        z.object({
+          type: z.enum(["MULTIPLE_CHOICE", "TRUE_FALSE", "CODE_OUTPUT"]),
+          prompt: z.string().trim().min(5).max(2000),
+          code: z.string().max(4000).optional(),
+          options: z
+            .array(
+              z.object({
+                id: z.string().min(1).max(8),
+                text: z.string().min(1).max(500),
+              })
+            )
+            .min(2)
+            .max(6),
+          answer: z.string().min(1).max(8),
+          explanation: z.string().trim().min(10).max(2000),
+        })
+      )
+      .min(1)
+      .max(20),
+  })
+  .superRefine((quiz, ctx) => {
+    quiz.questions.forEach((question, index) => {
+      const ids = question.options.map((o) => o.id);
+      if (new Set(ids).size !== ids.length || !ids.includes(question.answer)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["questions", index, "answer"],
+          message: "Option ids must be unique and the answer must be one of them.",
+        });
+      }
+    });
+  });
+export type ChapterQuizInput = z.input<typeof chapterQuizSchema>;
+
+/**
+ * Writes a chapter's knowledge check as a draft; publishing a revision of the
+ * chapter takes it live. A quiz already live is left alone, because replacing
+ * it would skip review.
+ */
+export async function saveChapterQuiz(
+  actor: CmsActor,
+  chapterId: string,
+  input: ChapterQuizInput
+): Promise<void> {
+  assertAdmin(actor);
+  const parsed = chapterQuizSchema.safeParse(input);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    throw new CmsError(
+      "invalid",
+      `Quiz ${issue?.path.join(".") ?? ""}: ${issue?.message ?? "invalid"}`
+    );
+  }
+  const quiz = parsed.data;
+  await prisma.$transaction(async (tx) => {
+    const existing = await tx.quiz.findUnique({
+      where: { slug: quiz.slug },
+      select: { id: true, chapterId: true, status: true },
+    });
+    if (existing && existing.chapterId !== chapterId) {
+      throw new CmsError("conflict", "That quiz slug belongs to another chapter.");
+    }
+    if (existing && existing.status !== "DRAFT") {
+      throw new CmsError("conflict", "That quiz is live and cannot be replaced.");
+    }
+    const row = await tx.quiz.upsert({
+      where: { slug: quiz.slug },
+      create: {
+        slug: quiz.slug,
+        title: quiz.title,
+        passScore: quiz.passScore,
+        chapterId,
+        status: "DRAFT",
+      },
+      update: { title: quiz.title, passScore: quiz.passScore },
+      select: { id: true },
+    });
+    await tx.quizQuestion.deleteMany({ where: { quizId: row.id } });
+    await tx.quizQuestion.createMany({
+      data: quiz.questions.map((question, order) => ({
+        quizId: row.id,
+        type: question.type,
+        order,
+        prompt: question.prompt,
+        code: question.code ?? null,
+        options: question.options,
+        answer: question.answer,
+        explanation: question.explanation,
+      })),
+    });
+    await audit(tx, actor, "quiz.saved", "quiz", row.id, `Saved ${quiz.slug}`);
   });
 }
 

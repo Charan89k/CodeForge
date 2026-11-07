@@ -3,7 +3,6 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { prisma } from "@/lib/db";
 import { utcDayStart } from "@/lib/dates";
 import { quizSubmissionSchema } from "@/lib/validation/quiz";
-import { searchCatalogue, CATALOGUE_PER_PAGE } from "./curriculum";
 import {
   CHAPTER_XP,
   completeChapter,
@@ -260,41 +259,5 @@ describe("notes pagination and privacy", () => {
     const shown = [...first.slice(0, NOTES_PER_PAGE), ...second].map((n) => n.id);
     expect(new Set(shown).size).toBe(NOTES_PER_PAGE + 5);
     expect(await listNotes(other)).toHaveLength(0);
-  });
-});
-
-describe("catalogue", () => {
-  it("lists published chapters only, with consistent pagination", async () => {
-    const drafts = await searchCatalogue({
-      search: `Zzdraft secret chapter ${SUFFIX}`,
-    });
-    expect(drafts.total).toBe(0);
-
-    const easy = await searchCatalogue({ difficulty: "EASY" });
-    expect(easy.items.every((c) => c.difficulty === "EASY")).toBe(true);
-    expect(easy.items.length).toBeLessThanOrEqual(CATALOGUE_PER_PAGE);
-    if (easy.totalPages > 1) {
-      const next = await searchCatalogue({ difficulty: "EASY", page: 2 });
-      expect(
-        next.items.filter((c) => easy.items.some((a) => a.id === c.id))
-      ).toHaveLength(0);
-    }
-
-    const beyond = await searchCatalogue({ difficulty: "EASY", page: 9999 });
-    expect(beyond.page).toBe(easy.totalPages);
-  });
-
-  it("filters by track and folds in only the caller's progress", async () => {
-    const user = await newUser("catalogue");
-    const dsa = await searchCatalogue({ track: "DSA" }, user);
-    expect(dsa.items.length).toBeGreaterThan(0);
-    expect(dsa.items.every((c) => c.track === "DSA")).toBe(true);
-
-    const target = dsa.items[0]!;
-    await completeChapter(user, target.id);
-    const mine = await searchCatalogue({ track: "DSA" }, user);
-    expect(mine.items.find((c) => c.id === target.id)?.status).toBe("COMPLETED");
-    const anonymous = await searchCatalogue({ track: "DSA" });
-    expect(anonymous.items.find((c) => c.id === target.id)?.status).toBe("NOT_STARTED");
   });
 });

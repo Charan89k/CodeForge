@@ -25,6 +25,7 @@ export const SYSTEM_DESIGN_COURSE: CourseSeed = {
   description:
     "Large systems are not built out of clever code. They are built out of a small number of components arranged to make specific trade-offs, and the skill is being able to say which trade-off you are making and why. This track builds the vocabulary first, then the components, then the arrangements — and every lesson's diagram is data you can read as text, not a picture.",
   icon: "Network",
+  category: "System Design",
   estimatedHours: 12,
   sections: [
     FOUNDATIONS,

@@ -13,6 +13,7 @@ import {
   publishRevision,
   rejectRevision,
   restoreRevision,
+  saveChapterQuiz,
   saveDraft,
   setCoursePublished,
   submitForReview,
@@ -20,6 +21,7 @@ import {
   type CmsActor,
   type DraftInput,
 } from "./cms";
+import { getQuiz } from "./quiz";
 
 const tag = `cms-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 let admin: CmsActor;
@@ -177,6 +179,105 @@ describe("the course CMS", () => {
       publishRevision(admin, revision.id),
     ]);
     expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+  });
+
+  describe("knowledge checks", () => {
+    const quiz = {
+      slug: `${tag}-check`,
+      title: "Check",
+      questions: [
+        {
+          type: "MULTIPLE_CHOICE" as const,
+          prompt: "Which name is a value bound to?",
+          options: [
+            { id: "a", text: "A variable" },
+            { id: "b", text: "A loop" },
+          ],
+          answer: "a",
+          explanation: "A variable names a value.",
+        },
+      ],
+    };
+    let draftChapter = "";
+
+    beforeAll(async () => {
+      draftChapter = await createChapter(admin, sectionId, {
+        title: "With a check",
+        slug: "with-a-check",
+      });
+    });
+
+    it("refuses an answer that is not an option, and a non-admin", async () => {
+      await expect(
+        saveChapterQuiz(admin, draftChapter, {
+          ...quiz,
+          questions: [{ ...quiz.questions[0]!, answer: "z" }],
+        })
+      ).rejects.toThrow(/answer must be one of them/);
+      await expect(
+        saveChapterQuiz({ ...admin, role: "USER" }, draftChapter, quiz)
+      ).rejects.toThrow(/platform admin/);
+    });
+
+    it("stays hidden until its chapter is published, and is then fixed", async () => {
+      await saveChapterQuiz(admin, draftChapter, quiz);
+      expect(await getQuiz(quiz.slug)).toBeNull();
+
+      await saveDraft(admin, draftChapter, draft(`## Check\n\n:::quiz ${quiz.slug}`));
+      const revision = (await getChapterForEditing(draftChapter))!.revisions[0]!;
+      await submitForReview(admin, revision.id);
+      expect(await getQuiz(quiz.slug)).toBeNull();
+      await publishRevision(admin, revision.id);
+
+      const live = await getQuiz(quiz.slug);
+      expect(live?.questions).toHaveLength(1);
+      expect(JSON.stringify(live)).not.toContain("explanation");
+      await expect(saveChapterQuiz(admin, draftChapter, quiz)).rejects.toThrow(/live/);
+      await expect(saveChapterQuiz(admin, chapterId, quiz)).rejects.toThrow(
+        /another chapter/
+      );
+    });
+  });
+
+  it("keeps lessons and sections in the order they were added", async () => {
+    await createSection(admin, courseId, { title: "Second", slug: "second" });
+    const second = await prisma.courseSection.findFirstOrThrow({
+      where: { courseId, slug: "second" },
+    });
+    const first = await prisma.courseSection.findUniqueOrThrow({
+      where: { id: sectionId },
+    });
+    expect(second.order).toBeGreaterThan(first.order);
+
+    for (const slug of ["one", "two", "three"]) {
+      await createChapter(admin, second.id, { title: slug, slug });
+    }
+    const orders = await prisma.chapter.findMany({
+      where: { sectionId: second.id },
+      orderBy: { order: "asc" },
+      select: { slug: true },
+    });
+    expect(orders.map((c) => c.slug)).toEqual(["one", "two", "three"]);
+  });
+
+  it("marks the course updated when a chapter is published", async () => {
+    const before = await prisma.course.findUniqueOrThrow({
+      where: { id: courseId },
+      select: { updatedAt: true },
+    });
+    const chapterWithDraft = await createChapter(admin, sectionId, {
+      title: "Later",
+      slug: "later",
+    });
+    await saveDraft(admin, chapterWithDraft, draft("## Later\n\nText"));
+    const revision = (await getChapterForEditing(chapterWithDraft))!.revisions[0]!;
+    await submitForReview(admin, revision.id);
+    await publishRevision(admin, revision.id);
+    const after = await prisma.course.findUniqueOrThrow({
+      where: { id: courseId },
+      select: { updatedAt: true },
+    });
+    expect(after.updatedAt.getTime()).toBeGreaterThan(before.updatedAt.getTime());
   });
 
   it("audits publishing", async () => {

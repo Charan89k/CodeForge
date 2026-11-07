@@ -24,6 +24,7 @@ export const LLD_COURSE: CourseSeed = {
   description:
     "Low-level design is the layer between 'which services exist' and 'which line runs': what types live inside one service, what each is responsible for, and how they reach each other. This track builds the vocabulary — responsibility, coupling, cohesion — then SOLID as special cases of it, then the patterns that are recurring answers to recurring problems. Every pattern is taught with the situation where it is the wrong choice.",
   icon: "Boxes",
+  category: "Software Design",
   estimatedHours: 10,
   sections: [
     LLD_FOUNDATIONS,

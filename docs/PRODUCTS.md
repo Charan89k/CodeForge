@@ -33,15 +33,16 @@ from the database on every request, so changing a URL grants nothing. See
 | Run and Submit | Needs configuration | Requires an isolated worker; see [EXECUTION.md](EXECUTION.md) |
 | Submission history, hints, solutions | Live | Solutions are original |
 | Problem provenance and licensed import | Live | `npm run problems:import`; no licensed set has been imported |
-| Courses, chapters, quizzes, notes, highlights | Live | 3 courses and 77 chapters |
+| Courses, chapters, quizzes, notes, highlights | Live | 3 seeded courses with 77 chapters, plus the authored courses below |
+| Course library: search, filters, sorting | Live | Subject, level, chapter difficulty, course length and your own progress, all in the URL. No filter by topic or tag, because courses do not have them |
 | Live Visualizer, guided algorithms | Live | 14 algorithms; every frame comes from running the algorithm |
 | Live Visualizer, your own code | Live | Python and JavaScript, traced in your browser |
 | Daily challenge and streak | Live | Solves are recorded only once Submit is configured |
 | Contests and standings | Partial | Admin-created, scored ICPC-style. No ratings or virtual contests. Needs Submit |
 | Leaderboard and public profiles | Live | Opt-in; nobody is listed by default |
 | AI tutor | Needs configuration | Requires an AI provider key |
-| Course CMS: authoring, review, publishing, version history | Live | Admin-only. Markdown lessons, or raw blocks for older chapters |
-| Course catalogue beyond the 3 courses | Partial | The CMS can publish them; no new courses are written yet |
+| Course CMS: authoring, review, publishing, version history | Live | Admin-only. Markdown lessons, or raw blocks for older chapters. Knowledge checks are written with `npm run courses:author`; there is no screen for them, and one cannot be replaced once live |
+| Original courses | Partial | Programming Foundations and Database Foundations: 18 lessons, 18 knowledge checks, every example run by a test. Written and tested; they reach a site only when an operator runs `npm run courses:author` there. More subjects are not written yet |
 | SQL problems and playground | Planned | |
 | Code playground | Planned | |
 | Discussions and community | Planned | |
